@@ -22,7 +22,6 @@ const uint8_t BIN_LEFT_SHIFT = 13;
 const uint8_t BIN_RIGHT_SHIFT = 14;
 
 
-
 const uint8_t PUSH = 19;
 const uint8_t INC_STACK = 20;
 const uint8_t POP = 21;
@@ -44,18 +43,63 @@ const uint8_t RETURN = 44;
 const uint8_t PRINT = 50;
 
 
-
 #define ARGUMENT_SIZE 3
 #define INSTRUCTION_SIZE 6
 #define ARG1 6
 #define ARG2 9
 #define ARG3 12
 
-#define INSTRUCTION(code) (code & 0b111111)
-#define TYPE1(code) ((code & 0b111000000) >> ARG1)
-#define TYPE2(code) ((code & 0b111000000000) >> ARG2)
-#define TYPE3(code) ((code & 0b111000000000000) >> ARG3)
+#define INSTRUCTION(code) ((code) & 0b111111)
+#define TYPE1(code) (((code) & 0b111000000) >> ARG1)
+#define TYPE2(code) (((code) & 0b111000000000) >> ARG2)
+#define TYPE3(code) (((code) & 0b111000000000000) >> ARG3)
 
+#define VALUE(arg, value_pointer, var) switch (arg) { \
+case STACK: {\
+var = *((uint64_t *)(stack + frame_pointer + (*(value_pointer))));\
+break;\
+}\
+case REGISTER_AS_ADDRESS: {\
+var = heap[registers[(*(value_pointer))]];\
+break;\
+}\
+case REGISTER: {\
+var = registers[(*(value_pointer))];\
+break;\
+}\
+case CONST_FLOAT:\
+case CONST_INT: {\
+var = *(value_pointer);\
+break;\
+}\
+default:\
+std::cout << "Unknown Type: " << (int)(arg) << std::endl;\
+var = 0;\
+}                                                     \
+
+#define TARGET(arg , value_pointer,value) switch (arg) {\
+case STACK: {\
+*((uint64_t *) (stack + frame_pointer + (*(value_pointer)))) = (value);\
+}\
+case REGISTER_AS_ADDRESS: {\
+*(heap + (*(registers + (*(value_pointer))))) = (value);\
+break;\
+}\
+case REGISTER: {\
+*(registers + (*(value_pointer))) = (value);\
+break;\
+}\
+case CONST_FLOAT:\
+case CONST_INT:\
+std::cout << "Cant set a value to a Constant type: " << (int) (arg) << std::endl;\
+break;\
+default:\
+std::cout << "Unknown Type: " << (int) (arg) << std::endl;\
+}\
+
+#define INC1ARG instruction_pointer += 10;
+#define INC2ARG instruction_pointer += 18;
+#define INC3ARG instruction_pointer += 26;
 
 uint8_t *code_segment;
 uint64_t *registers;
@@ -74,52 +118,35 @@ uint64_t instruction_pointer = 0;
 uint64_t max_long = 0xffffffffffffffff;
 
 uint64_t code_builder = 0;
+
 void addInstruction(uint16_t instruction) {
     uint16_t *s = (uint16_t *) (code_segment + code_builder);
     *s = instruction;
-    code_builder+=2;
+    code_builder += 2;
 }
+
 void valueFirst(uint64_t value) {
     uint64_t *l = (uint64_t *) (code_segment + code_builder);
     *l = value;
-    code_builder+=8;
+    code_builder += 8;
 }
 
 void start() {
-    addInstruction(PUSH | (CONST_INT << ARG1));
-    valueFirst(233);
+    addInstruction(ADD | (REGISTER << ARG1) | (CONST_INT << ARG2) | (CONST_INT << ARG3));
+    valueFirst(1);
+    valueFirst(17);
+    valueFirst(3);
 
-    addInstruction(PRINT | (STACK << ARG1));
-    valueFirst(0);
-   //
+    addInstruction(PRINT | (REGISTER << ARG1));
+    valueFirst(1);
+    //
     //printInstruction( PUSH | (CONST_INT << ARG1));
-   // ValueFirst(1337);
+    // ValueFirst(1337);
 
 }
 
 
-uint64_t getValue(uint8_t arg, uint64_t *value_pointer) {
-    const uint64_t value_value = *value_pointer;
-    switch (arg) {
-        case STACK: {
-            return *((uint64_t *)(stack + frame_pointer + value_value));
-        }
-        case REGISTER_AS_ADDRESS: {
-            return heap[registers[value_value]];
-        }
-        case REGISTER: {
-            return registers[value_value];
-        }
-        case CONST_FLOAT:
-        case CONST_INT: {
-            return *value_pointer;
-        }
-        default:
-            std::cout << "Unknown Type: " << (int)arg << std::endl;
-            return 0;
-    }
-}
-//1011001000000000000000000000000011101001
+
 
 void runInstruction() {
     const uint16_t code = *((uint16_t *) (code_segment + instruction_pointer));
@@ -127,32 +154,55 @@ void runInstruction() {
     const uint8_t arg0 = TYPE1(code);
     const uint8_t arg1 = TYPE2(code);
     const uint8_t arg2 = TYPE3(code);
-    std::cout << "Instruction: " <<  code << std::endl;
+    std::cout << "Instruction: " << code << std::endl;
     switch (instruction) {
         case PUSH: {
-            uint64_t *var = (uint64_t *)(stack+stack_pointer);
-            uint64_t i = getValue(arg0, (uint64_t *) (code_segment + instruction_pointer + 2));
-            //float *i2 = (float*)&i;
-            //std::cout << *i2 << " pushed"  << std::endl;
+            uint64_t *var = (uint64_t *) (stack + stack_pointer);
+            uint64_t i;
+            VALUE(arg0, ((uint64_t *) (code_segment + instruction_pointer + 2)), i);
             *var = i;
-            stack_pointer+=8;
-            instruction_pointer += 10;
+            stack_pointer += 8;
+            INC1ARG
+            break;
+        }
+        case INC_STACK: {
+            uint64_t i;
+            VALUE(arg0, ((uint64_t *) (code_segment + instruction_pointer + 2)), i);
+            stack_pointer += i;
+            INC1ARG
+            break;
+        }
+        case DEC_STACK: {
+            std::cout << "Not jet implemented" << std::endl;
+            break;
+        }
+        case POP: {
+            TARGET(arg0,(uint64_t *) (code_segment + instruction_pointer + 2) ,*(uint64_t *) (stack + stack_pointer) );
+            stack_pointer--;
+            INC1ARG
             break;
         }
         case MOVE:
             std::cout << "Move" << std::endl;
             break;
-        case ADD:
-            std::cout << "Add" << std::endl;
+        case ADD: {
+            uint64_t l;
+            uint64_t r;
+            VALUE(arg1, ((uint64_t *) (code_segment + instruction_pointer + 10)), l);
+            VALUE(arg2, ((uint64_t *) (code_segment + instruction_pointer + 18)), r);
+            TARGET(arg0,(uint64_t *) (code_segment + instruction_pointer + 2)  , l + r);
+            INC3ARG
             break;
+        }
         case PRINT: {
-            uint64_t i = getValue(arg0, (uint64_t *) (code_segment + instruction_pointer + 2));
+            uint64_t i;
+            VALUE(arg0, ((uint64_t *) (code_segment + instruction_pointer + 2)), i);
             std::cout << "[PRINT] " << i << std::endl;
-            instruction_pointer += 10;
+            INC1ARG
             break;
         }
         default:
-            std::cout << "Unknown Instruction: " << (int)instruction << std::endl;
+            std::cout << "Unknown Instruction: " << (int) instruction << std::endl;
     }
 }
 
