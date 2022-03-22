@@ -75,7 +75,7 @@ break;\
 default:\
 std::cout << "Unknown Type: " << (int)(arg) << std::endl;\
 var = 0;\
-}                                                     \
+}\
 
 #define TARGET(arg , value_pointer,value) switch (arg) {\
 case STACK: {\
