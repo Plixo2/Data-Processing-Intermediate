@@ -20,12 +20,19 @@ struct Node {
 #define TOKEN token_stream->current()
 #define TYPE token_stream->current().type
 #define match(_type) if(token_stream->current().type == (_type).type)
-#define alternative(_type) else if(token_stream->current().type == (_type).type)
+//#define alternative(_type) else if(token_stream->current().type == (_type).type)
 #define NEXT next()
 #define AS(type) std::string (type) = token_stream->current().raw_string
 #define expect(str) else { throw (str);}
 #define RET  return new Node
 #define THEN(name) Node *name = this->name()
+#define ASSERT(_type) if((_type).type != token_stream->current().type) { throw "Failed Assertion"; }
+#define WHILE_NOT(_type, to_call , name) \
+                  Node * (name) = to_call;       \
+while(token_stream->current().type != (_type).type) { \
+    (name) = to_call;      \
+    NEXT;\
+}
 
 class Lexer {
 private:
@@ -40,19 +47,30 @@ public:
     }
 
     Node *expression() {
-        return new Node{};
+        match(Syntax::PARENTHESES_OPEN) {
+            NEXT;
+            WHILE_NOT(Syntax::PARENTHESES_CLOSED, expression() , exp);
+            RET {LexNode::ST};
+        } else match(Syntax::NUMBER) {
+
+        } expect("1 or 2");
     }
 
     Node *statement() {
         match(Syntax::BRACES_OPEN) {
+            NEXT;
+            THEN(statement);
+            match(Syntax::BRACES_CLOSED) {
+                return statement;
+            }
 
-        } alternative(Syntax::IDENTIFIER) {
+        } else match(Syntax::IDENTIFIER) {
             AS(ID);
             NEXT;
             match(Syntax::ASSIGN) {
                 NEXT;
                 THEN(expression);
-                RET {LexNode::ASSIGN_STATEMENT, "1", new Node{LexNode::IDENTIFIER,ID}, expression};
+                RET{LexNode::ASSIGN_STATEMENT, "1", new Node{LexNode::IDENTIFIER, ID}, expression};
             }
         } expect("1 or 2")
     }
