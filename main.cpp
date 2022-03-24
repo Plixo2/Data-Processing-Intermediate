@@ -1,4 +1,6 @@
 #include <iostream>
+#include "Tokenizer.h"
+#include "IterableStream.h"
 
 const uint8_t REGISTER = 1;
 const uint8_t STACK = 2;
@@ -52,6 +54,30 @@ int main() {
     std::cout << sizeof(Byte_Field) << std::endl;
     std::cout << sizeof(Op_Code) << std::endl;
     std::cout << sizeof(Instruction) << std::endl;
+    std::vector<Token_Capture> caps;
+    caps.push_back({0,"^[a-zA-Z]+$","^[a-zA-Z0-9_\\-]+$"});
+    caps.push_back({1,"^\\s$","^\\s+$"});
+
+    Tokenizer tokenizer(caps);
+    std::string str = "HELLO world";
+    const char *string = str.c_str();
+    std::vector<Token>* stream = tokenizer.generate_stream(string, str.length());
+
+    IterableStream iterableStream(stream);
+
+    while(iterableStream.hasEntriesLeft()) {
+        const Token &current = iterableStream.current();
+        std::cout << current.raw_string << " | " << current.type << std::endl;
+        iterableStream.consume();
+    }
+
+    std::vector<Token> filtered(*stream);
+    filtered.erase(std::remove_if(filtered.begin(), filtered.end(),  [](const Token& token) {return token.type == 1;}) , filtered.end());
+    std::cout<< filtered.size() << std::endl;
+    std::cout<< stream->size() << std::endl;
+
+    delete stream;
+
     return 0;
 }
 
