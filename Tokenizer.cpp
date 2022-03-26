@@ -4,17 +4,37 @@
 
 #include <regex>
 #include <iostream>
+#include <set>
 
+
+class DuplicateToken: public std::exception
+{
+    virtual const char* what() const throw()
+    {
+        return "A Token Type is found twice";
+    }
+} excp;
 
 Tokenizer::~Tokenizer() {
 
 }
 
 Tokenizer::Tokenizer(std::vector<Token_Capture> captures) : captures(captures) {
+    std::set<uint64_t> set;
+    for (const auto &item : captures) {
+        if(set.contains(item.type)) {
+            throw excp;
+        }
+        set.insert(item.type);
+    }
 }
 
 
 std::vector<Token> *Tokenizer::generate_stream(const char *char_stream, uint64_t length) {
+//    std::basic_regex r("^true");
+//    std::string str = "true tru tr t true hello truea atrue";
+//    std::cout << std::regex_search(str, r) << " match" << std::endl;
+
     auto *list = new std::vector<Token>();
 
     uint64_t char_index = 0;
@@ -29,9 +49,9 @@ std::vector<Token> *Tokenizer::generate_stream(const char *char_stream, uint64_t
         bool matched = false;
         for (Token_Capture capture: captures) {
             std::regex regex(capture.start_match);
-            std::regex peek(capture.peek_match);
+            std::regex peek(capture.peek_match,  std::regex_constants::ECMAScript |  std::regex_constants::extended );
             if (std::regex_match(as_string, regex) &&
-                (capture.peek_match.empty() || std::regex_match(full_string.substr(char_index), peek))) {
+                (capture.peek_match.empty() || std::regex_search(full_string.substr(char_index), peek))) {
                 matched = true;
                 std::regex capture_regex(capture.capture_match);
                 char_index++;
