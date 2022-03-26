@@ -2,6 +2,7 @@
 #include "Tokenizer.h"
 #include "IterableStream.h"
 #include "DPI_Syntax.h"
+#include "Lexer.h"
 
 const uint8_t REGISTER = 1;
 const uint8_t STACK = 2;
@@ -49,6 +50,30 @@ Object *record_stack;
 const uint64_t stack_size_default = 64;
 
 
+
+
+void printBT(const std::string& prefix, const  Lexer::Node* node, bool isLeft)
+{
+    if( node != nullptr )
+    {
+        std::cout << prefix;
+
+        std::cout << (isLeft ? "|--" : "L--" );
+
+        // print the value of the node
+        std::cout <<  LexNode::NAMES[node->lex_type] << ": " << node->data << std::endl;
+
+        // enter the next tree level - left and right branch
+        if(node->childs.size() >= 1) {
+            for(int i = 0; i < node->childs.size()-1; i++) {
+                printBT( prefix + (isLeft ? "|   " : "    "), node->childs[i], true);
+            }
+            printBT( prefix + (isLeft ? "|   " : "    "), node->childs[node->childs.size()-1], false);
+
+        }
+    }
+}
+
 int main() {
     std::cout << sizeof(Byte_Field) << std::endl;
     std::cout << sizeof(Op_Code) << std::endl;
@@ -84,7 +109,11 @@ int main() {
     caps.push_back(Syntax::WHITESPACE);
 
     Tokenizer tokenizer(caps);
-    std::string str = "HELLO *true / tru+ tr ^ 2 -t ~= true < > *= != && >= <= (  { ) } !false !=hello && truea; || atrue === true";
+//    plus , minus , div , mul , pow , mod
+//    greater equals, greater, smaller , smaller equals, equals , not equals . approx equals
+//    and / or
+//    parentheses
+    std::string str = "int i = 2+5 + (1^5) / (100.0 || 10 != 20 && 10 ~= 100);";
     const char *string = str.c_str();
     std::vector<Token> *stream = tokenizer.generate_stream(string, str.length());
     stream->push_back({Syntax::_EOF.type, "", str.length(), str.length()});
@@ -108,10 +137,18 @@ int main() {
         i += current.type * i;
         iterableStream.consume();
     }
-    std::cout << "h: " << i % 10000 << std::endl;
+    std::cout << "h: " << i % 10001 << std::endl;
 
+    iterableStream.reset();
+    Lexer::Lexer lexer(&iterableStream);
+    Lexer::Node *pNode = lexer.test();
+
+    printBT("", pNode, false);
+
+    delete pNode;
     delete stream;
 
     return 0;
 }
+
 

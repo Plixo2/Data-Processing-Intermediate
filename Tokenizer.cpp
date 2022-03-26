@@ -31,12 +31,8 @@ Tokenizer::Tokenizer(std::vector<Token_Capture> captures) : captures(captures) {
 
 
 std::vector<Token> *Tokenizer::generate_stream(const char *char_stream, uint64_t length) {
-//    std::basic_regex r("^true");
-//    std::string str = "true tru tr t true hello truea atrue";
-//    std::cout << std::regex_search(str, r) << " match" << std::endl;
-
     auto *list = new std::vector<Token>();
-
+    length += 1;
     uint64_t char_index = 0;
     std::string as_string;
     std::string full_string;
