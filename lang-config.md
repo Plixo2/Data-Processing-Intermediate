@@ -1,5 +1,5 @@
 
-```
+```c
 int func(int i , float f) -> {
 
     
@@ -22,4 +22,4 @@ aClass c = new aClass();
 c.f = 0.4;
 
     
-````
+```
