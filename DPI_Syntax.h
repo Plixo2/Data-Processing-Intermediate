@@ -42,6 +42,22 @@ namespace Syntax {
 }
 
 namespace IRCode {
+    const uint8_t MOVE = 0;
+    const uint8_t ADD = 1;
+    const uint8_t LOAD_CONST = 2;
+    const uint8_t LOAD_MEMBER = 3;
+    const uint8_t SET_MEMBER = 4;
+    const uint8_t JUMP = 5;
+    const uint8_t AND = 6;
+    const uint8_t OR = 7;
+    const uint8_t NOT = 8;
+    const uint8_t SMALLER = 9;
+    const uint8_t SMALLER_EQUAL = 10;
+    const uint8_t GREATER = 11;
+    const uint8_t GREATER_EQUAL = 12;
+    const uint8_t EQUALS = 13;
+    const uint8_t NOT_EQUALS = 14;
+    const uint8_t APPROX_EQUALS = 15;
 
 }
 
@@ -104,7 +120,6 @@ namespace LexNode {
             "APPROX_EQUALS"
     };
 }
-
 
 
 #endif //DATA_PROCESSING_INTERMEDIATE_DPI_SYNTAX_H
