@@ -11,21 +11,34 @@
 
 namespace Lexer {
     class AssertionException : public std::exception {
+        const char *text;
+
         virtual const char *what() const noexcept {
-            return "Failed Assertion";
+            return text;
         }
-    } excp_;
+
+    public:
+        AssertionException(std::string *text) : text(text->c_str()) {
+
+        }
+
+        AssertionException(const char *text) : text(text) {
+
+        }
+    };
 
     struct Node {
         uint8_t lex_type = 0;
         std::string data;
         std::vector<Node *> childs = std::vector<Node *>();
+
         ~Node() {
-            for (const auto &item : childs)  {
+            for (const auto &item: childs) {
                 delete item;
             }
         }
     };
+
 #define TOKEN token_stream->current()
 #define TYPE token_stream->current().type
 #define match(_type) if(token_stream->hasEntriesLeft() && token_stream->current().type == (_type).type)
@@ -34,7 +47,17 @@ namespace Lexer {
 #define AS(type) std::string (type) = token_stream->current().raw_string
 #define expect(str) else { throw (str);}
 #define THEN(name) Node *name = this->name()
-#define ASSERT(_type) if((_type).type != token_stream->current().type) { throw excp_; }
+#define THROW(text) {std::string str= (text); \
+    str += std::to_string(TOKEN.type); \
+    throw AssertionException(&str);}
+
+#define ASSERT(_type) if((_type).type != token_stream->current().type) { \
+    std::string excptstr = "Assertion fail for "; \
+    excptstr += std::to_string(token_stream->current().type);                              \
+    excptstr += " instead of ";\
+    excptstr += std::to_string(_type.type); \
+    throw AssertionException(&excptstr);       \
+}
 
     class Lexer {
     private:
@@ -56,7 +79,7 @@ namespace Lexer {
             Node *left = varComparison();
             while (IS(Syntax::B_AND) || IS(Syntax::B_OR)) {
                 uint8_t id = IS(Syntax::B_AND) ? LexNode::B_AND :
-                             IS(Syntax::B_OR) ? LexNode::B_OR : throw excp_;
+                             IS(Syntax::B_OR) ? LexNode::B_OR : throw AssertionException("Unknown bool type");
                 NEXT;
                 Node *right = varComparison();
                 left = createNode(id, left, right);
@@ -67,14 +90,16 @@ namespace Lexer {
         Node *varComparison() {
             Node *left = varExpression();
             if (IS(Syntax::GREATER) || IS(Syntax::GREATER_EQUAL) || IS(Syntax::EQUALS) ||
-                   IS(Syntax::NOT_EQUALS) || IS(Syntax::SMALLER) || IS(Syntax::SMALLER_EQUAL) || IS(Syntax::APPROX_EQUALS)) {
+                IS(Syntax::NOT_EQUALS) || IS(Syntax::SMALLER) || IS(Syntax::SMALLER_EQUAL) ||
+                IS(Syntax::APPROX_EQUALS)) {
                 uint8_t id = IS(Syntax::GREATER) ? LexNode::GREATER :
                              IS(Syntax::GREATER_EQUAL) ? LexNode::GREATER_EQUAL :
                              IS(Syntax::EQUALS) ? LexNode::EQUALS :
                              IS(Syntax::NOT_EQUALS) ? LexNode::NOT_EQUALS :
                              IS(Syntax::SMALLER) ? LexNode::SMALLER :
                              IS(Syntax::SMALLER_EQUAL) ? LexNode::SMALLER_EQUAL :
-                             IS(Syntax::APPROX_EQUALS) ? LexNode::APPROX_EQUALS : throw excp_;
+                             IS(Syntax::APPROX_EQUALS) ? LexNode::APPROX_EQUALS : throw AssertionException(
+                                     "Unknown bool type");
                 NEXT;
                 Node *right = varExpression();
                 left = createNode(id, left, right);
@@ -92,7 +117,7 @@ namespace Lexer {
                              IS(Syntax::A_MULTIPLY) ? LexNode::A_MULTIPLY :
                              IS(Syntax::A_DIVIDE) ? LexNode::A_DIVIDE :
                              IS(Syntax::A_MOD) ? LexNode::A_MOD :
-                             IS(Syntax::A_POW) ? LexNode::A_POW : throw excp_;
+                             IS(Syntax::A_POW) ? LexNode::A_POW : throw AssertionException("Unknown bool type");
                 NEXT;
                 Node *right = factor();
                 left = createNode(id, left, right);
@@ -130,10 +155,78 @@ namespace Lexer {
                 NEXT;
                 return expression;
             }
-            throw excp_;
+            THROW("Cant resolve factory ");
         }
 
-        Node *test() {
+        Node *functionDeclaration() {
+            match(Syntax::KEYWORD) {
+                AS(functionName);
+                NEXT;
+                THEN(functionInput);
+                std::string returnType = "";
+                match(Syntax::ARROW) {
+                    NEXT;
+                    match(Syntax::KEYWORD) {
+                        AS(type);
+                        returnType = type;
+                        NEXT;
+                    } else THROW("expected a keyword");
+                }
+                THEN(statement);
+                Node *io = createNode(LexNode::FUNCTION_IO, functionInput,
+                                      createNode(LexNode::FUNCTION_OUTPUT,
+                                                 createLeaf(LexNode::TYPE_IDENTIFIER, returnType)));
+                Node *name = createLeaf(LexNode::IDENTIFIER, functionName);
+                Node *node = createNode(LexNode::FUNCTION_DECLARATION, name, io);
+                node->childs.push_back(createNode(LexNode::STATEMENT,statement));
+                return node;
+            }
+            THROW("Cant resolve function");
+        }
+
+        Node *statement() {
+            return createLeaf(LexNode::ASSIGN_STATEMENT, "statement end leaf");
+        }
+
+        Node *functionInput() {
+            std::vector<Node *> childs;
+            match(Syntax::PARENTHESES_OPEN) {
+                NEXT;
+                match(Syntax::PARENTHESES_CLOSED) {
+                    NEXT;
+                } else {
+                    do {
+                        Node *declaration = varDeclaration();
+                        childs.push_back(declaration);
+                    } while (IS(Syntax::SEPARATOR));
+                    ASSERT(Syntax::PARENTHESES_CLOSED);
+                    NEXT;
+                }
+
+            }
+            Node *node = createNode(LexNode::FUNCTION_INPUT);
+            node->childs = childs;
+            return node;
+        }
+
+        Node *varDeclaration() {
+            match(Syntax::KEYWORD) {
+                AS(name);
+                NEXT;
+                match(Syntax::KEYWORD) {
+                    AS(key);
+                    NEXT;
+                    Node *node = createNode(LexNode::VARIABLE_DECLARATION,
+                                            createLeaf(LexNode::TYPE_IDENTIFIER, name),
+                                            createLeaf(LexNode::IDENTIFIER, key)
+                    );
+                    return node;
+                }
+            }
+            THROW("Cant resolve variable declaration ");
+        }
+
+        Node *varDeclarationStatement() {
             match(Syntax::KEYWORD) {
                 AS(typeOrName);
                 NEXT;
@@ -150,11 +243,12 @@ namespace Lexer {
                     }
                 } else match(Syntax::ASSIGN) {
                     NEXT;
-                    Node *node = createNode(LexNode::ASSIGN_STATEMENT,createLeaf(LexNode::IDENTIFIER, typeOrName) , createNode(LexNode::EXPRESSION, expression()));
+                    Node *node = createNode(LexNode::ASSIGN_STATEMENT, createLeaf(LexNode::IDENTIFIER, typeOrName),
+                                            createNode(LexNode::EXPRESSION, expression()));
                     return node;
                 }
             }
-            throw excp_;
+            THROW("Cant resolve variable statement ");
         }
 
         Node *createLeaf(uint8_t lex_type, std::string literal) {
