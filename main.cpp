@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include "Tokenizer.h"
 #include "IterableStream.h"
 #include "DPI_Syntax.h"
@@ -49,6 +50,13 @@ int main() {
     caps.push_back(Syntax::EQUALS);
     caps.push_back(Syntax::TRUE);
     caps.push_back(Syntax::FALSE);
+    caps.push_back(Syntax::IF);
+    caps.push_back(Syntax::ELSE);
+    caps.push_back(Syntax::FOR);
+    caps.push_back(Syntax::AS);
+    caps.push_back(Syntax::IN);
+    caps.push_back(Syntax::FROM);
+    caps.push_back(Syntax::TO);
     caps.push_back(Syntax::APPROX_EQUALS);
     caps.push_back(Syntax::NOT_EQUALS);
     caps.push_back(Syntax::B_AND);
@@ -57,9 +65,10 @@ int main() {
     caps.push_back(Syntax::ASSIGN);
     caps.push_back(Syntax::ARROW);
     caps.push_back(Syntax::SEPARATOR);
-    caps.push_back(Syntax::END_OF_STATEMENT);
     caps.push_back(Syntax::KEYWORD);
     caps.push_back(Syntax::NUMBER);
+    caps.push_back(Syntax::COMMENT);
+    caps.push_back(Syntax::LINE_COMMENT);
     caps.push_back(Syntax::WHITESPACE);
 
     Tokenizer tokenizer(caps);
@@ -67,17 +76,21 @@ int main() {
 //    greater equals, greater, smaller , smaller equals, equals , not equals . approx equals
 //    and / or
 //    parentheses
-    std::string str = "name (int i) -> string";
+
+
+    std::ifstream ifs("../files/test.txt");
+    std::string content( (std::istreambuf_iterator<char>(ifs) ),
+                         (std::istreambuf_iterator<char>()    ) );
+
+    std::string str = content;
+    std::cout << str << std::endl;
     const char *string = str.c_str();
     std::vector<Token> *stream = tokenizer.generate_stream(string, str.length());
-
-
 
     std::vector<Token> filtered(*stream);
     filtered.erase(std::remove_if(filtered.begin(), filtered.end(), [](const Token &token) {
         return token.type == Syntax::WHITESPACE.type ||
-               token.type == Syntax::EOL.type ||
-               token.type == Syntax::_EOF.type;
+               token.type == Syntax::EOL.type;
     }), filtered.end());
 
 //    std::cout << filtered.size() << std::endl;
