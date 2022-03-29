@@ -29,7 +29,7 @@ void printBT(const std::string& prefix, const  Lexer::Node* node, bool isLeft)
 }
 
 int main() {
-    Interpreter::cycle();
+//    Interpreter::cycle();
     std::vector<Token_Capture> caps;
 
     caps.push_back(Syntax::BRACES_OPEN);
@@ -55,6 +55,8 @@ int main() {
     caps.push_back(Syntax::B_OR);
     caps.push_back(Syntax::B_NOT);
     caps.push_back(Syntax::ASSIGN);
+    caps.push_back(Syntax::ARROW);
+    caps.push_back(Syntax::SEPARATOR);
     caps.push_back(Syntax::END_OF_STATEMENT);
     caps.push_back(Syntax::KEYWORD);
     caps.push_back(Syntax::NUMBER);
@@ -65,10 +67,10 @@ int main() {
 //    greater equals, greater, smaller , smaller equals, equals , not equals . approx equals
 //    and / or
 //    parentheses
-    std::string str = "int i = 2+5 + (1^5) / (100.0 || 10 != 20 && 10 ~= 100);";
+    std::string str = "name (int i) -> string";
     const char *string = str.c_str();
     std::vector<Token> *stream = tokenizer.generate_stream(string, str.length());
-    stream->push_back({Syntax::_EOF.type, "", str.length(), str.length()});
+
 
 
     std::vector<Token> filtered(*stream);
@@ -93,7 +95,7 @@ int main() {
 
     iterableStream.reset();
     Lexer::Lexer lexer(&iterableStream);
-    Lexer::Node *pNode = lexer.test();
+    Lexer::Node *pNode = lexer.functionDeclaration();
 
     printBT("", pNode, false);
 

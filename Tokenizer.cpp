@@ -1,5 +1,6 @@
 
 #include "Tokenizer.h"
+#include "DPI_Syntax.h"
 
 
 #include <regex>
@@ -73,6 +74,6 @@ std::vector<Token> *Tokenizer::generate_stream(const char *char_stream, uint64_t
             break;
         }
     }
-
+    list->push_back({Syntax::_EOF.type, "EOF", length,length});
     return list;
 }
