@@ -42,9 +42,9 @@ namespace Lexer {
 #define TOKEN token_stream->current()
 #define TYPE token_stream->current().type
 #define match(_type) if(token_stream->hasEntriesLeft() && token_stream->current().type == (_type).type)
-#define IS(_type) token_stream->hasEntriesLeft() && token_stream->current().type == (_type).type
+#define IS(_type) (token_stream->hasEntriesLeft() && token_stream->current().type == (_type).type)
 #define NEXT next()
-#define AS(type) std::string (type) = token_stream->current().raw_string
+#define REMEMBER(type) std::string (type) = token_stream->current().raw_string
 #define expect(str) else { throw (str);}
 #define THEN(name) Node *name = this->name()
 #define THROW(text) {std::string str= (text); \
@@ -52,9 +52,9 @@ namespace Lexer {
     throw AssertionException(&str);}
 
 #define ASSERT(_type) if((_type).type != token_stream->current().type) { \
-    std::string excptstr = "Assertion fail for "; \
+    std::string excptstr = "Assertion fail. found "; \
     excptstr += std::to_string(token_stream->current().type);                              \
-    excptstr += " instead of ";\
+    excptstr += ", but expected ";\
     excptstr += std::to_string(_type.type); \
     throw AssertionException(&excptstr);       \
 }
@@ -72,23 +72,23 @@ namespace Lexer {
         }
 
         Node *expression() {
-            return boolExpression();
+            return boolArithmetic();
         }
 
-        Node *boolExpression() {
-            Node *left = varComparison();
+        Node *boolArithmetic() {
+            Node *left = comparisonArithmetic();
             while (IS(Syntax::B_AND) || IS(Syntax::B_OR)) {
                 uint8_t id = IS(Syntax::B_AND) ? LexNode::B_AND :
                              IS(Syntax::B_OR) ? LexNode::B_OR : throw AssertionException("Unknown bool type");
                 NEXT;
-                Node *right = varComparison();
+                Node *right = comparisonArithmetic();
                 left = createNode(id, left, right);
             }
             return left;
         }
 
-        Node *varComparison() {
-            Node *left = varExpression();
+        Node *comparisonArithmetic() {
+            Node *left = arithmetic();
             if (IS(Syntax::GREATER) || IS(Syntax::GREATER_EQUAL) || IS(Syntax::EQUALS) ||
                 IS(Syntax::NOT_EQUALS) || IS(Syntax::SMALLER) || IS(Syntax::SMALLER_EQUAL) ||
                 IS(Syntax::APPROX_EQUALS)) {
@@ -101,14 +101,14 @@ namespace Lexer {
                              IS(Syntax::APPROX_EQUALS) ? LexNode::APPROX_EQUALS : throw AssertionException(
                                      "Unknown bool type");
                 NEXT;
-                Node *right = varExpression();
+                Node *right = arithmetic();
                 left = createNode(id, left, right);
             }
             return left;
         }
 
 
-        Node *varExpression() {
+        Node *arithmetic() {
             Node *left = factor();
             while (IS(Syntax::A_PLUS) || IS(Syntax::A_MINUS) || IS(Syntax::A_MULTIPLY) ||
                    IS(Syntax::A_DIVIDE) || IS(Syntax::A_MOD) || IS(Syntax::A_POW)) {
@@ -136,7 +136,7 @@ namespace Lexer {
                 NEXT;
                 return factor();
             } else match(Syntax::NUMBER) {
-                AS(num);
+                REMEMBER(num);
                 NEXT;
                 if (num.find('.') != std::string::npos) {
                     return createLeaf(LexNode::FLOAT_CONSTANT, num);
@@ -154,67 +154,85 @@ namespace Lexer {
                 ASSERT(Syntax::PARENTHESES_CLOSED);
                 NEXT;
                 return expression;
+            } else match(Syntax::KEYWORD) {
+                REMEMBER(name);
+                NEXT;
+                match(Syntax::PARENTHESES_OPEN) {
+
+                    std::vector<Node *> childs;
+                    do {
+                        NEXT;
+                        childs.push_back(createNode(LexNode::ARGUMENT, expression()));
+                    } while (IS(Syntax::SEPARATOR));
+
+                    ASSERT(Syntax::PARENTHESES_CLOSED);
+                    NEXT;
+                    Node *calls = createNode(LexNode::CALL_ARGUMENTS);
+                    calls->childs = childs;
+                    Node *call = createNode(LexNode::FUNCTION_CALL, calls, createLeaf(LexNode::IDENTIFIER, name));
+                    return call;
+                } else {
+                    return createLeaf(LexNode::IDENTIFIER, name);
+                }
             }
             THROW("Cant resolve factory ");
         }
 
         Node *functionDeclaration() {
             match(Syntax::KEYWORD) {
-                AS(functionName);
+                REMEMBER(functionName);
                 NEXT;
                 THEN(functionInput);
-                std::string returnType = "";
+                std::string returnType = "void";
                 match(Syntax::ARROW) {
                     NEXT;
                     match(Syntax::KEYWORD) {
-                        AS(type);
+                        REMEMBER(type);
                         returnType = type;
                         NEXT;
                     } else THROW("expected a keyword");
                 }
-                THEN(statement);
+                THEN(block);
                 Node *io = createNode(LexNode::FUNCTION_IO, functionInput,
                                       createNode(LexNode::FUNCTION_OUTPUT,
                                                  createLeaf(LexNode::TYPE_IDENTIFIER, returnType)));
                 Node *name = createLeaf(LexNode::IDENTIFIER, functionName);
-                Node *node = createNode(LexNode::FUNCTION_DECLARATION, name, io);
-                node->childs.push_back(createNode(LexNode::STATEMENT,statement));
+                Node *node = createNode(LexNode::FUNCTION_DECLARATION, name, io, block);
                 return node;
             }
             THROW("Cant resolve function");
         }
 
-        Node *statement() {
-            return createLeaf(LexNode::ASSIGN_STATEMENT, "statement end leaf");
-        }
-
         Node *functionInput() {
-            std::vector<Node *> childs;
             match(Syntax::PARENTHESES_OPEN) {
                 NEXT;
+                std::vector<Node *> childs;
                 match(Syntax::PARENTHESES_CLOSED) {
                     NEXT;
                 } else {
-                    do {
+                    Node *declaration = varDeclaration();
+                    childs.push_back(declaration);
+                    while (IS(Syntax::SEPARATOR)) {
+                        NEXT;
                         Node *declaration = varDeclaration();
                         childs.push_back(declaration);
-                    } while (IS(Syntax::SEPARATOR));
+                    }
                     ASSERT(Syntax::PARENTHESES_CLOSED);
                     NEXT;
                 }
-
+                Node *node = createNode(LexNode::FUNCTION_INPUT);
+                node->childs = childs;
+                return node;
             }
-            Node *node = createNode(LexNode::FUNCTION_INPUT);
-            node->childs = childs;
-            return node;
+            THROW("Cant resolve function input ")
         }
 
         Node *varDeclaration() {
             match(Syntax::KEYWORD) {
-                AS(name);
+                REMEMBER(name);
                 NEXT;
                 match(Syntax::KEYWORD) {
-                    AS(key);
+                    REMEMBER(key);
                     NEXT;
                     Node *node = createNode(LexNode::VARIABLE_DECLARATION,
                                             createLeaf(LexNode::TYPE_IDENTIFIER, name),
@@ -226,19 +244,37 @@ namespace Lexer {
             THROW("Cant resolve variable declaration ");
         }
 
-        Node *varDeclarationStatement() {
+        Node *block() {
+            match(Syntax::BRACES_OPEN) {
+                NEXT;
+                std::vector<Node *> childs;
+                while (!IS(Syntax::BRACES_CLOSED)) {
+                    THEN(statement);
+                    childs.push_back(statement);
+                }
+                ASSERT(Syntax::BRACES_CLOSED);
+                NEXT;
+                Node *node = createNode(LexNode::STATEMENT_BLOCK);
+                node->childs = childs;
+                return node;
+            }
+            THROW("Cant resolve block");
+        }
+
+        Node *statement() {
             match(Syntax::KEYWORD) {
-                AS(typeOrName);
+                REMEMBER(typeOrName);
                 NEXT;
                 match(Syntax::KEYWORD) {
-                    AS(key);
+                    REMEMBER(key);
                     NEXT;
                     match(Syntax::ASSIGN) {
                         NEXT;
                         Node *node = createNode(LexNode::VAR_CREATION_STATEMENT,
                                                 createLeaf(LexNode::TYPE_IDENTIFIER, typeOrName),
-                                                createLeaf(LexNode::IDENTIFIER, key));
-                        node->childs.push_back(createNode(LexNode::EXPRESSION, expression()));
+                                                createLeaf(LexNode::IDENTIFIER, key),
+                                                createNode(LexNode::EXPRESSION, expression())
+                        );
                         return node;
                     }
                 } else match(Syntax::ASSIGN) {
@@ -246,10 +282,47 @@ namespace Lexer {
                     Node *node = createNode(LexNode::ASSIGN_STATEMENT, createLeaf(LexNode::IDENTIFIER, typeOrName),
                                             createNode(LexNode::EXPRESSION, expression()));
                     return node;
+                } else match(Syntax::PARENTHESES_OPEN) {
+
+                    std::vector<Node *> childs;
+                    do {
+                        NEXT;
+                        childs.push_back(createNode(LexNode::ARGUMENT, expression()));
+                    } while (IS(Syntax::SEPARATOR));
+
+                    ASSERT(Syntax::PARENTHESES_CLOSED);
+                    NEXT;
+
+                    Node *calls = createNode(LexNode::CALL_ARGUMENTS);
+                    calls->childs = childs;
+                    Node *call = createNode(LexNode::FUNCTION_CALL, calls, createLeaf(LexNode::IDENTIFIER, typeOrName));
+                    return call;
                 }
+            } else match(Syntax::FOR) {
+               
+            } else match(Syntax::IF) {
+                NEXT;
+                THEN(expression);
+                THEN(block);
+                Node *elseBlock = nullptr;
+                match(Syntax::ELSE) {
+                    NEXT;
+                    elseBlock = this->block();
+                }
+                Node *positive = createNode(LexNode::BRANCH_POSITIVE, block);
+                Node *negative = createNode(LexNode::BRANCH_NEGATIVE);
+                if (elseBlock) {
+                    negative->childs.push_back(elseBlock);
+                } else {
+                    negative->childs.push_back(createNode(LexNode::STATEMENT_BLOCK));
+                }
+                Node *expr = createNode(LexNode::EXPRESSION, expression);
+                Node *node = createNode(LexNode::BRANCH, positive, negative, expr);
+                return node;
             }
             THROW("Cant resolve variable statement ");
         }
+
 
         Node *createLeaf(uint8_t lex_type, std::string literal) {
             Node *node = new Node{lex_type, literal};
@@ -274,6 +347,13 @@ namespace Lexer {
             return node;
         }
 
+        Node *createNode(uint8_t lex_type, Node *childA, Node *childB, Node *childC) {
+            Node *node = new Node{lex_type, ""};
+            node->childs.push_back(childA);
+            node->childs.push_back(childB);
+            node->childs.push_back(childC);
+            return node;
+        }
     };
 }
 
