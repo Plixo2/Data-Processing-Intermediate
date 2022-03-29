@@ -36,13 +36,19 @@ namespace Syntax {
     Token_Capture APPROX_EQUALS = {23, R"(^~)", R"(^(~|~=)$)", R"(^~=)"};
     Token_Capture TRUE = {24, "^t", "^(true|tru|tr|t)$", R"(^true\b)"};
     Token_Capture FALSE = {25, "^f", "^(false|fals|fal|fa|f)$", R"(^false\b)"};
-    Token_Capture ASSIGN = {26, R"(^=)", R"(^=$)", R"(^=[^=]+)"};
-    Token_Capture ARROW = {27, R"(^-)", R"(^(-|->)$)", R"(^->)"};
-    Token_Capture END_OF_STATEMENT = {28, R"(^;)", R"(^;$)", R"(^;)"};
-    Token_Capture COMMENT = {29, R"(^/)", R"(^//.*$)", R"(^//)"};
-    Token_Capture LINE_COMMENT = {30, R"(^;)", R"(^;$)", R"(^;)"};
-    Token_Capture EOL = {31, "\\n", "\\n", ""};
-    Token_Capture _EOF = {32, "", "", ""};
+    Token_Capture IF = {26, "^i", "^(if|i)$", R"(^if\b)"};
+    Token_Capture ELSE = {27, "^e", "^(else|els|el|e)$", R"(^else\b)"};
+    Token_Capture FOR = {28, "^f", "^(for|fo|f)$", R"(^for\b)"};
+    Token_Capture IN = {30, "^i", "^(in|i)$", R"(^in\b)"};
+    Token_Capture FROM = {31, "^f", "^(from|fro|fr|f)$", R"(^from\b)"};
+    Token_Capture TO = {32, "^t", "^(to|t)$", R"(^to\b)"};
+    Token_Capture AS = {29, "^a", "^(as|a)$", R"(^as\b)"};
+    Token_Capture ASSIGN = {33, R"(^=)", R"(^=$)", R"(^=[^=]+)"};
+    Token_Capture ARROW = {34, R"(^-)", R"(^(-|->)$)", R"(^->)"};
+    Token_Capture COMMENT = {36, R"(^/)", R"(^//.*$)", R"(^//)"};
+    Token_Capture LINE_COMMENT = {37, R"(^;)", R"(^;$)", R"(^;)"};
+    Token_Capture EOL = {38, "\\n", "\\n", ""};
+   // Token_Capture END_OF_STATEMENT = {35, R"(^;)", R"(^;$)", R"(^;)"};
 }
 
 namespace IRCode {
@@ -70,41 +76,53 @@ namespace LexNode {
     const uint8_t VAR_CREATION_STATEMENT = 1;
     const uint8_t FUNCTION_DECLARATION = 2;
     const uint8_t VARIABLE_DECLARATION = 3;
-    const uint8_t FUNCTION_INPUT = 4;
-    const uint8_t FUNCTION_IO = 5;
-    const uint8_t FUNCTION_OUTPUT = 6;
-    const uint8_t IDENTIFIER = 7;
-    const uint8_t TYPE_IDENTIFIER = 8;
-    const uint8_t EXPRESSION = 9;
-    const uint8_t BOOL_EXPRESSION = 10;
-    const uint8_t FLOAT_CONSTANT = 11;
-    const uint8_t INT_CONSTANT = 12;
-    const uint8_t ADDITION = 13;
-    const uint8_t UNARY = 14;
-    const uint8_t NUMBER = 15;
-    const uint8_t B_AND = 16;
-    const uint8_t B_OR = 17;
-    const uint8_t B_NOT = 18;
-    const uint8_t A_PLUS = 19;
-    const uint8_t A_MINUS = 20;
-    const uint8_t A_MULTIPLY = 21;
-    const uint8_t A_DIVIDE = 22;
-    const uint8_t A_MOD = 23;
-    const uint8_t A_POW = 24;
-    const uint8_t SMALLER = 25;
-    const uint8_t SMALLER_EQUAL = 26;
-    const uint8_t GREATER = 27;
-    const uint8_t GREATER_EQUAL = 28;
-    const uint8_t EQUALS = 29;
-    const uint8_t NOT_EQUALS = 30;
-    const uint8_t APPROX_EQUALS = 31;
-    const uint8_t STATEMENT = 32;
+    const uint8_t ARGUMENT = 4;
+    const uint8_t FUNCTION_CALL = 5;
+    const uint8_t CALL_ARGUMENTS = 6;
+    const uint8_t BRANCH_POSITIVE = 7;
+    const uint8_t BRANCH_NEGATIVE = 8;
+    const uint8_t BRANCH = 9;
+    const uint8_t FUNCTION_INPUT = 10;
+    const uint8_t FUNCTION_IO = 11;
+    const uint8_t FUNCTION_OUTPUT = 12;
+    const uint8_t IDENTIFIER = 13;
+    const uint8_t TYPE_IDENTIFIER = 14;
+    const uint8_t EXPRESSION = 15;
+    const uint8_t BOOL_EXPRESSION = 16;
+    const uint8_t FLOAT_CONSTANT = 17;
+    const uint8_t INT_CONSTANT = 18;
+    const uint8_t ADDITION = 19;
+    const uint8_t UNARY = 20;
+    const uint8_t NUMBER = 21;
+    const uint8_t B_AND = 22;
+    const uint8_t B_OR = 23;
+    const uint8_t B_NOT = 24;
+    const uint8_t A_PLUS = 25;
+    const uint8_t A_MINUS = 26;
+    const uint8_t A_MULTIPLY = 27;
+    const uint8_t A_DIVIDE = 28;
+    const uint8_t A_MOD = 29;
+    const uint8_t A_POW = 30;
+    const uint8_t SMALLER = 31;
+    const uint8_t SMALLER_EQUAL = 32;
+    const uint8_t GREATER = 33;
+    const uint8_t GREATER_EQUAL = 34;
+    const uint8_t EQUALS = 35;
+    const uint8_t NOT_EQUALS = 36;
+    const uint8_t APPROX_EQUALS = 37;
+    const uint8_t STATEMENT_BLOCK = 38;
 
     const std::vector<std::string> NAMES = {
             "ASSIGN_STATEMENT",
             "VAR_CREATION_STATEMENT",
             "FUNCTION_DECLARATION",
             "VARIABLE_DECLARATION",
+            "ARGUMENT",
+            "FUNCTION_CALL",
+            "CALL_ARGUMENTS",
+            "BRANCH_POSITIVE",
+            "BRANCH_NEGATIVE",
+            "BRANCH",
             "FUNCTION_INPUT",
             "FUNCTION_IO",
             "FUNCTION_OUTPUT",
@@ -133,7 +151,7 @@ namespace LexNode {
             "EQUALS",
             "NOT_EQUALS",
             "APPROX_EQUALS",
-            "STATEMENT"
+            "STATEMENT_BLOCK",
     };
 }
 
