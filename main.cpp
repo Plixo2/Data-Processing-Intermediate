@@ -32,8 +32,8 @@ void printBT(const std::string& prefix, const  Lexer::Node* node, bool isLeft)
 int main() {
     Interpreter::feed();
 
-    Interpreter::cycle();
-    Interpreter::cycle();
+
+    Interpreter::run();
     /*std::vector<Token_Capture> caps;
 
     caps.push_back(Syntax::BRACES_OPEN);
