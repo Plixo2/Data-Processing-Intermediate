@@ -75,6 +75,7 @@ namespace IRCode {
     const uint8_t NOT_EQUALS = 19;
     const uint8_t APPROX_EQUALS = 20;
     const uint8_t PRINT = 21;
+    const uint8_t NEW = 27;
     const uint8_t NOP = 22;
     const uint8_t CALL = 23;
     const uint8_t RETURN = 24;
