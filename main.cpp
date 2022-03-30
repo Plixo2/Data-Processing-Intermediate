@@ -4,7 +4,7 @@
 #include "IterableStream.h"
 #include "DPI_Syntax.h"
 #include "Lexer.h"
-#include "Interpreter.h"
+#include "Vm.h"
 
 
 void printBT(const std::string& prefix, const  Lexer::Node* node, bool isLeft)
@@ -30,8 +30,11 @@ void printBT(const std::string& prefix, const  Lexer::Node* node, bool isLeft)
 }
 
 int main() {
-//    Interpreter::cycle();
-    std::vector<Token_Capture> caps;
+    Interpreter::feed();
+
+    Interpreter::cycle();
+    Interpreter::cycle();
+    /*std::vector<Token_Capture> caps;
 
     caps.push_back(Syntax::BRACES_OPEN);
     caps.push_back(Syntax::BRACES_CLOSED);
@@ -113,7 +116,7 @@ int main() {
     printBT("", pNode, false);
 
     delete pNode;
-    delete stream;
+    delete stream;*/
 
     return 0;
 }

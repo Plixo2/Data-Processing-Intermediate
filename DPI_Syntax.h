@@ -68,6 +68,8 @@ namespace IRCode {
     const uint8_t EQUALS = 13;
     const uint8_t NOT_EQUALS = 14;
     const uint8_t APPROX_EQUALS = 15;
+    const uint8_t PRINT = 17;
+    const uint8_t END_OF_CODE = 60;
 
 }
 
