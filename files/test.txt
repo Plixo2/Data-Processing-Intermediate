@@ -1,7 +1,8 @@
-name(int i) -> string {
+loop() {
    int i = 0;
-
+   while(i < 10000000) {
+        i += 1;
+   }
+   print(i);
 
 }
-
-type name = 10 * 100;

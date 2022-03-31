@@ -122,7 +122,7 @@ namespace Interpreter {
         constants[0] = {0, {1.0}};
         constants[1] = {0, {0.2}};
         constants[2] = {0, {3.1}};
-        constants[3] = {0, {1.0}};
+        constants[3] = {0, {10000000.0}};
 
 
         // FunctionProto proto = {2, 6};
@@ -133,11 +133,18 @@ namespace Interpreter {
 
         add({{IRCode::LOAD_CONST, 0, 0, 0}});
         add({{IRCode::LOAD_CONST, 1, 0, 1}});
+        add({{IRCode::LOAD_CONST, 6, 0, 3}});
         add({{IRCode::ADD, 2,2,0}});
-        add({{IRCode::MINUS, 2,2,1}});
+       // add({{IRCode::MINUS, 2,2,1}});
+        add({{IRCode::GREATER_EQUAL, 5,2,6}});
+        add({{IRCode::JUMP, 5,0,7}});
+        add({{IRCode::JUMP_A, 0,0,9}});
+        add({{IRCode::PRINT, 2}});
+        add({{IRCode::END_OF_CODE}});
+
        // add({{IRCode::PRINT, 1}});
 
-        add({{IRCode::JUMP_A,0,0,2}});
+        add({{IRCode::JUMP_A,0,0,3}});
         add({{IRCode::END_OF_CODE}});
     }
 
@@ -353,11 +360,7 @@ namespace Interpreter {
                 break;
             }
         }
-        if(runns >= 7) {
-            isRunning = false;
-            std::cout << "   Float: " << Register(2).value.as_float << std::endl;
-        }
-      //  std::cout << "Program counter at " << pc << std::endl;
+//       std::cout << "Program counter at " << pc << std::endl;
     }
 
 
