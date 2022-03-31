@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cmath>
 #include <sstream>
+#include <chrono>
 #include "DPI_Syntax.h"
 #include "Math.h"
 
@@ -14,11 +15,14 @@
 #define Pop(obj) {(obj) = call_stack[--stack_pointer];}
 
 namespace Interpreter {
-    typedef struct _objTable;
+    struct _objTable;
+    struct _prototype;
+    struct _funcProto;
     typedef union {
         dpi_float as_float;
         dpi_int as_int;
         _objTable *as_pointer;
+        _funcProto *as_function;
     } Value;
 
     typedef struct {
@@ -26,14 +30,6 @@ namespace Interpreter {
         Value value;
     } Object;
 
-    typedef struct _objTable {
-        Object *members;
-        uint16_t type;
-
-        ~_objTable() {
-            delete members;
-        }
-    } ObjectTable;
 
     typedef union {
         uint8_t u;
@@ -52,16 +48,25 @@ namespace Interpreter {
         int32_t as_int;
     } Instruction;
 
-    typedef struct {
+    typedef struct _funcProto {
         uint8_t activation_records;
-        uint32_t instruction_index;
+        uint32_t instruction_location;
     } FunctionProto;
 
-    typedef struct {
+    typedef struct _prototype {
         uint16_t members;
         uint16_t type;
+        FunctionProto *constructors;
     } Prototype;
 
+    typedef struct _objTable {
+        Object *members;
+        _prototype *prototype;
+
+        ~_objTable() {
+            delete members;
+        }
+    } ObjectTable;
 
     std::vector<ObjectTable *> object_pool;
 
@@ -69,8 +74,8 @@ namespace Interpreter {
     uint64_t max_prototypes;
 
 
-    FunctionProto *functional_prototypes;
-    uint64_t max_function_prototypes = 256;
+    // FunctionProto *functional_prototypes;
+    //  uint64_t max_function_prototypes = 256;
 
     Object *constants;
     uint64_t max_constants = 256;
@@ -90,50 +95,61 @@ namespace Interpreter {
     uint64_t pc = 0;
     bool isRunning = false;
 
+    uint64_t runns = 0;
+
     void add(Instruction i) {
         instructions[instructionBuilder] = i;
         instructionBuilder++;
     }
 
-    void feed() {
+    void allocate() {
         record_stack = (Object *) malloc(max_stack * sizeof(Object));
         for (int i = 0; i < max_stack; i++) {
             record_stack[i] = {};
         }
         call_stack = (uint64_t *) malloc(max_stack * sizeof(uint64_t));
-        functional_prototypes = (FunctionProto *) malloc(max_function_prototypes * sizeof(FunctionProto));
+        //  functional_prototypes = (FunctionProto *) malloc(max_function_prototypes * sizeof(FunctionProto));
         instructions = (Instruction *) malloc(max_instructions * sizeof(Instruction));
         for (int i = 0; i < max_instructions; i++) {
             instructions[i] = {{IRCode::END_OF_CODE}};
         }
         prototypes = (Prototype *) malloc(max_prototypes * sizeof(Prototype));
         constants = (Object *) malloc(max_constants * sizeof(Object));
-        constants[0] = {0, {3}};
-        constants[1] = {0, {2.0}};
+    }
+
+    void feed() {
+        allocate();
+        constants[0] = {0, {1.0}};
+        constants[1] = {0, {0.2}};
         constants[2] = {0, {3.1}};
         constants[3] = {0, {1.0}};
 
 
-        FunctionProto proto = {2, 6};
-        functional_prototypes[1] = proto;
+        // FunctionProto proto = {2, 6};
+        // functional_prototypes[1] = proto;
 
         Prototype protObj = {2, 1337};
         prototypes[1] = protObj;
 
-        add({{IRCode::LOAD_CONST, 0, 0, 2}});
-        add({{IRCode::NEW, 0, 0, 1}});
-        add({{IRCode::SET_MEMBER, 0, 0, 1}});
+        add({{IRCode::LOAD_CONST, 0, 0, 0}});
+        add({{IRCode::LOAD_CONST, 1, 0, 1}});
+        add({{IRCode::ADD, 2,2,0}});
+        add({{IRCode::MINUS, 2,2,1}});
+       // add({{IRCode::PRINT, 1}});
+
+        add({{IRCode::JUMP_A,0,0,2}});
         add({{IRCode::END_OF_CODE}});
     }
 
     void cycle() {
+        runns++;
         //uint32_t full = (a << 16) | (b << 8) | c;
         Instruction i = instructions[pc];
         switch (i.code.op) {
             case IRCode::NEW: {
                 Prototype &proto = prototypes[((i.code.B << 8) | i.code.C)];
                 auto *members = (Object *) malloc(proto.members * sizeof(Object));
-                auto *obj = new ObjectTable{members, proto.type};
+                auto *obj = new ObjectTable{members, &proto};
                 object_pool.push_back(obj);
                 Object object;
                 object.type = proto.type;
@@ -165,7 +181,7 @@ namespace Interpreter {
                 break;
             }
             case IRCode::SET_MEMBER: {
-                Register(i.code.B).value.as_pointer->members[i.code.C] = Register(i.code.A);
+                Register(i.code.A).value.as_pointer->members[i.code.B] = Register(i.code.C);
                 pc++;
                 break;
             }
@@ -189,18 +205,15 @@ namespace Interpreter {
                 break;
             }
             case IRCode::CALL: {
-                uint16_t function = (i.code.A << 16) | (i.code.B << 8) | i.code.C;
                 Push(pc + 1);
                 activation_record_pointer += active_record_size;
-                std::cout << "pushed " << active_record_size << std::endl;
                 Push(active_record_size);
-                FunctionProto &proto = functional_prototypes[function];
-                active_record_size = proto.activation_records;
-                pc = proto.instruction_index;
+                FunctionProto *proto = Register(i.code.A).value.as_function;
+                active_record_size = proto->activation_records;
+                pc = proto->instruction_location;
                 break;
             }
             case IRCode::RETURN: {
-                // uint16_t function = (i.code.A << 16) | (i.code.B << 8) | i.code.C;
                 Pop(active_record_size);
                 activation_record_pointer -= active_record_size;
                 Pop(pc);
@@ -340,17 +353,25 @@ namespace Interpreter {
                 break;
             }
         }
-        std::cout << "Program counter at " << pc << std::endl;
+        if(runns >= 7) {
+            isRunning = false;
+            std::cout << "   Float: " << Register(2).value.as_float << std::endl;
+        }
+      //  std::cout << "Program counter at " << pc << std::endl;
     }
 
 
     void run() {
         isRunning = true;
+        auto t1 = std::chrono::high_resolution_clock::now();
         while (isRunning) {
             cycle();
         }
+        auto t2 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> ms_double = t2 - t1;
         std::cout << "######### End Of Program #########" << std::endl;
-        std::cout << "- deleted " << object_pool.size() << " objects " << std::endl;
+        std::cout << "took " << ms_double.count() << " ms" << std::endl;
+        std::cout << "deleted " << object_pool.size() << " objects" << std::endl;
         for (const auto &item: object_pool) {
             delete item;
         }

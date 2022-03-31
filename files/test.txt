@@ -1,3 +1,7 @@
-name() {
+name(int i) -> string {
    int i = 0;
+
+
 }
+
+type name = 10 * 100;
