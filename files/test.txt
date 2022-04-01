@@ -1,8 +1,13 @@
-loop() {
-   int i = 0;
-   while(i < 10000000) {
-        i += 1;
-   }
-   print(i);
+var string name = "";
+fn add(string add);
+add = fn (string add) {
 
 }
+
+
+fn make(string add) -> string = {
+    return add;
+}
+
+
+

@@ -123,6 +123,7 @@ namespace LexNode {
     const uint8_t NOT_EQUALS = 36;
     const uint8_t APPROX_EQUALS = 37;
     const uint8_t STATEMENT_BLOCK = 38;
+    const uint8_t TOP = 39;
 
     const std::vector<std::string> NAMES = {
             "ASSIGN_STATEMENT",
@@ -164,6 +165,7 @@ namespace LexNode {
             "NOT_EQUALS",
             "APPROX_EQUALS",
             "STATEMENT_BLOCK",
+            "TOP",
     };
 }
 

@@ -178,30 +178,6 @@ namespace Lexer {
             THROW("Cant resolve factory ");
         }
 
-        Node *functionDeclaration() {
-            match(Syntax::KEYWORD) {
-                REMEMBER(functionName);
-                NEXT;
-                THEN(functionInput);
-                std::string returnType = "void";
-                match(Syntax::ARROW) {
-                    NEXT;
-                    match(Syntax::KEYWORD) {
-                        REMEMBER(type);
-                        returnType = type;
-                        NEXT;
-                    } else THROW("expected a keyword");
-                }
-                THEN(block);
-                Node *io = createNode(LexNode::FUNCTION_IO, functionInput,
-                                      createNode(LexNode::FUNCTION_OUTPUT,
-                                                 createLeaf(LexNode::TYPE_IDENTIFIER, returnType)));
-                Node *name = createLeaf(LexNode::IDENTIFIER, functionName);
-                Node *node = createNode(LexNode::FUNCTION_DECLARATION, name, io, block);
-                return node;
-            }
-            THROW("Cant resolve function");
-        }
 
         Node *functionInput() {
             match(Syntax::PARENTHESES_OPEN) {
@@ -321,6 +297,58 @@ namespace Lexer {
                 return node;
             }
             THROW("Cant resolve variable statement ");
+        }
+
+        Node *functionDeclaration(std::string functionName) {
+            THEN(functionInput);
+            std::string returnType = "void";
+            match(Syntax::ARROW) {
+                NEXT;
+                match(Syntax::KEYWORD) {
+                    REMEMBER(type);
+                    returnType = type;
+                    NEXT;
+                } else THROW("expected a keyword");
+            }
+            THEN(block);
+            Node *io = createNode(LexNode::FUNCTION_IO, functionInput,
+                                  createNode(LexNode::FUNCTION_OUTPUT,
+                                             createLeaf(LexNode::TYPE_IDENTIFIER, returnType)));
+            Node *name = createLeaf(LexNode::IDENTIFIER, functionName);
+            Node *node = createNode(LexNode::FUNCTION_DECLARATION, name, io, block);
+            return node;
+
+        }
+
+        Node *topLevelNode() {
+            std::vector<Node *> childs;
+            while (token_stream->hasEntriesLeft()) {
+                match(Syntax::KEYWORD) {
+                    REMEMBER(varName);
+                    NEXT;
+                    match(Syntax::KEYWORD) {
+                        REMEMBER(key);
+                        NEXT;
+                        match(Syntax::ASSIGN) {
+                            NEXT;
+                            Node *node = createNode(LexNode::VAR_CREATION_STATEMENT,
+                                                    createLeaf(LexNode::TYPE_IDENTIFIER, varName),
+                                                    createLeaf(LexNode::IDENTIFIER, key),
+                                                    createNode(LexNode::EXPRESSION, expression())
+                            );
+                            childs.push_back(node);
+                            continue;
+                        }
+                    } else {
+                        childs.push_back(functionDeclaration(varName));
+                        continue;
+                    }
+                }
+                THROW("Cant resolve function ");
+            }
+            Node *node = createNode(LexNode::TOP);
+            node->childs = childs;
+            return node;
         }
 
 

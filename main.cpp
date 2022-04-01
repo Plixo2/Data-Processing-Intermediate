@@ -30,11 +30,9 @@ void printBT(const std::string& prefix, const  Lexer::Node* node, bool isLeft)
 }
 
 int main() {
-    Interpreter::feed();
-
-
-    Interpreter::run();
-    /*std::vector<Token_Capture> caps;
+    //Interpreter::feed();
+    //Interpreter::run();
+    std::vector<Token_Capture> caps;
 
     caps.push_back(Syntax::BRACES_OPEN);
     caps.push_back(Syntax::BRACES_CLOSED);
@@ -111,12 +109,12 @@ int main() {
 
     iterableStream.reset();
     Lexer::Lexer lexer(&iterableStream);
-    Lexer::Node *pNode = lexer.functionDeclaration();
+    Lexer::Node *pNode = lexer.topLevelNode();
 
     printBT("", pNode, false);
 
     delete pNode;
-    delete stream;*/
+    delete stream;
 
     return 0;
 }
