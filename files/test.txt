@@ -1,5 +1,6 @@
-var string name = "";
+string name = "";
 fn add(string add);
+
 add = fn (string add) {
 
 }
