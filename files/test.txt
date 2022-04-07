@@ -1,14 +1,16 @@
+struct object {
 string name = "";
-fn add(string add);
-
-add = fn (string add) {
-
+fn add(string add) -> void;
 }
 
+main = fn (string[] args) {
+    object o
+    o.name = args[0]
+    o.add = fn (string add) -> void {
 
-fn make(string add) -> string = {
-    return add;
+    }
 }
+
 
 
 
