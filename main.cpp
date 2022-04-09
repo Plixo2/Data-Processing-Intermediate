@@ -54,10 +54,9 @@ int main() {
     caps.push_back(Syntax::IF);
     caps.push_back(Syntax::ELSE);
     caps.push_back(Syntax::FOR);
-    caps.push_back(Syntax::AS);
-    caps.push_back(Syntax::IN);
-    caps.push_back(Syntax::FROM);
-    caps.push_back(Syntax::TO);
+    caps.push_back(Syntax::STATIC);
+    caps.push_back(Syntax::STRUCT);
+    caps.push_back(Syntax::FN);
     caps.push_back(Syntax::APPROX_EQUALS);
     caps.push_back(Syntax::NOT_EQUALS);
     caps.push_back(Syntax::B_AND);

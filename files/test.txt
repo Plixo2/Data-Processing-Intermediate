@@ -1,6 +1,11 @@
+import natives
+using natives
+
+macro max
+
 struct object {
-string name = "";
-fn add(string add) -> void;
+string name = ""
+fn add(string add) -> void
 }
 
 main = fn (string[] args) {
@@ -10,6 +15,75 @@ main = fn (string[] args) {
 
     }
 }
+
+
+static basics {
+    string name = "Hello World"
+    int name = 0
+    [int] list = []
+    bool a = false
+    main = fn (string args) -> void {
+
+        if a < b {
+
+        } else if a {
+
+        } else {
+
+        }
+
+        a = 1
+        println(a)
+        while true {
+            list += 10
+            list += 4
+            list += -4
+        }
+
+        for int i = 0 i > 10 i+=1 {
+            if args {
+
+            } else if bool {
+
+            } else {
+
+            }
+        }
+
+}
+
+static advanced {
+    static = fn () {
+
+    int a = any list: fn (int i) -> bool {
+        return x > 0
+    }
+
+    int a = list.any(fn (int i) -> bool {
+        return x > 0
+    }
+
+    find list: (x) -> x > 0
+    find any: x -> x > 0
+
+    list = filter list: x -> 0
+    [int] sorted =  sort list: (x,y) -> x - y
+    [int] random =  scramble list:
+
+    [Topf] töpfe = []
+    [Deckel] deckel = []
+
+
+        bool exp = töpfe.every(fn (Topf topf) -> bool {
+            return deckel.any(fn (Deckel deckel) -> bool {
+                return topf.fits(deckel)
+            }
+        }
+        bool expr = every töpfe: (t) -> any deckel (d) -> t.fits(d)
+
+    }
+}
+
 
 
 

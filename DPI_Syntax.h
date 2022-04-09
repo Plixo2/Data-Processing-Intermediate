@@ -14,6 +14,8 @@ namespace Syntax {
     Token_Capture BRACES_CLOSED = {1, R"(^\})", R"(^\}$)", R"(^\})"};
     Token_Capture PARENTHESES_OPEN = {2, R"(^\()", R"(^\($)", R"(^\()"};
     Token_Capture PARENTHESES_CLOSED = {3, R"(^\))", R"(^\)$)", R"(^\))"};
+    Token_Capture BRACKET_OPEN = {3, R"(^\[)", R"(^\[$)", R"(^\[)"};
+    Token_Capture BRACKET_CLOSED = {3, R"(^\])", R"(^\]$)", R"(^\])"};
     Token_Capture KEYWORD = {4, R"(^[a-zA-Z]+$)", R"(^\w+$)", ""};
     Token_Capture NUMBER = {5, R"(^[.0-9])", R"(^[.0-9]*$)", R"(^([0-9])|(.[0-9]))"};
     Token_Capture SEPARATOR = {6, R"(^,)", R"(^,$)", R"(^,)"};
@@ -41,14 +43,18 @@ namespace Syntax {
     Token_Capture FOR = {28, "^f", "^(for|fo|f)$", R"(^for\b)"};
     Token_Capture IN = {30, "^i", "^(in|i)$", R"(^in\b)"};
     Token_Capture FROM = {31, "^f", "^(from|fro|fr|f)$", R"(^from\b)"};
+    Token_Capture STRUCT = {31, "^s", "^(struct|struc|stru|str|st|s)$", R"(^struct\b)"};
+    Token_Capture STATIC = {31, "^s", "^(static|stati|stat|sta|st|s)$", R"(^static\b)"};
+    Token_Capture LAMBDA_SHORTFORM = {31, "^\\s$", "^\\s*$", R"(^\s*\w+\s+\w+\:)"};
     Token_Capture TO = {32, "^t", "^(to|t)$", R"(^to\b)"};
     Token_Capture AS = {29, "^a", "^(as|a)$", R"(^as\b)"};
+    Token_Capture FN = {29, "^f", "^(fn|f)$", R"(^fn\b)"};
     Token_Capture ASSIGN = {33, R"(^=)", R"(^=$)", R"(^=[^=]+)"};
     Token_Capture ARROW = {34, R"(^-)", R"(^(-|->)$)", R"(^->)"};
     Token_Capture COMMENT = {36, R"(^/)", R"(^//.*$)", R"(^//)"};
     Token_Capture LINE_COMMENT = {37, R"(^;)", R"(^;$)", R"(^;)"};
     Token_Capture EOL = {38, "\\n", "\\n", ""};
-   // Token_Capture END_OF_STATEMENT = {35, R"(^;)", R"(^;$)", R"(^;)"};
+    // Token_Capture END_OF_STATEMENT = {35, R"(^;)", R"(^;$)", R"(^;)"};
 }
 
 namespace IRCode {
