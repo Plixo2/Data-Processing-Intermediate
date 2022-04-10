@@ -1,0 +1,53 @@
+toplvl := "static" staticBlock | "struct" structBlock
+
+staticBlock := idDef "{" idDef "=" functionDef statement "}"
+structBlock := idDef "{" definitions "}"
+
+statement := blockStatement | flowStatement | normalStatement
+blockStatement := "{" blockStatementList
+blockStatementList := statement "}" | statement blockStatementList
+
+flowStatement := "if" expression statement | "if" expression statement "else" statement | "for" statement expression statement statement
+normalStatement := varAssignment ";" | varDefinition ";" | expression ";" 
+
+
+
+definitions := varDefinition | functionDef
+
+varDefinition := typeDef idDef "=" expression
+varAssignment := varTerminal "=" expression
+varCall := varTerminal "(" argList ")"
+
+outDefinitions := typeDef
+inputDefinitions := "(" inputDefs ")" 
+inputDefs := typeDef idDef "," inputDefs | typeDef idDef
+
+functionDef := "fn" idDef inputDefinitions "->" outDefinitions
+typeDef := "[" "keyword" "]" | "keyword"
+idDef := "keyword"
+
+expression := boolArithmetic
+
+factor := "(" expression ")" | 
+			"-" factor | 
+			"+" factor | 
+			"!" factor
+			"number" | 
+			"false"  | 
+			"true" |
+			arrayInitializer |
+			member
+
+
+
+argList := 	expression "," argList | expression
+
+member := varTerminal | varTerminal "." member
+varTerminal := "keyword" | "keyword" "(" argList ")" | "keyword" "[" expression "]"
+
+arrayInitializer := "[" argList "]"
+
+boolArithmetic := comparisonArithmetic "&&" boolArithmetic | comparisonArithmetic
+comparisonArithmetic := arithmetic "<=" comparisonArithmetic | arithmetic
+arithmetic := term "+" arithmetic | term
+term := factor "*" term | factor
