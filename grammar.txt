@@ -8,7 +8,7 @@ blockStatement := "{" blockStatementList
 blockStatementList := statement "}" | statement blockStatementList
 
 flowStatement := "if" expression statement | "if" expression statement "else" statement | "for" statement expression statement statement
-normalStatement := varAssignment ";" | varDefinition ";" | expression ";" 
+normalStatement := varAssignment | varDefinition | varCall
 
 
 
@@ -16,29 +16,15 @@ definitions := varDefinition | functionDef
 
 varDefinition := typeDef idDef "=" expression
 varAssignment := varTerminal "=" expression
-varCall := varTerminal "(" argList ")"
+varCall := member "(" argList ")"
 
 outDefinitions := typeDef
 inputDefinitions := "(" inputDefs ")" 
 inputDefs := typeDef idDef "," inputDefs | typeDef idDef
 
 functionDef := "fn" idDef inputDefinitions "->" outDefinitions
-typeDef := "[" "keyword" "]" | "keyword"
+typeDef := "keyword" "[" "]" | "keyword"
 idDef := "keyword"
-
-expression := boolArithmetic
-
-factor := "(" expression ")" | 
-			"-" factor | 
-			"+" factor | 
-			"!" factor
-			"number" | 
-			"false"  | 
-			"true" |
-			arrayInitializer |
-			member
-
-
 
 argList := 	expression "," argList | expression
 
@@ -47,7 +33,22 @@ varTerminal := "keyword" | "keyword" "(" argList ")" | "keyword" "[" expression 
 
 arrayInitializer := "[" argList "]"
 
+expression := boolArithmetic
+
+factor := "(" expression ")" |
+			"-" factor |
+			"+" factor |
+			"!" factor
+			"number" |
+			"false"  |
+			"true" |
+			arrayInitializer |
+			member
+
+
 boolArithmetic := comparisonArithmetic "&&" boolArithmetic | comparisonArithmetic
 comparisonArithmetic := arithmetic "<=" comparisonArithmetic | arithmetic
 arithmetic := term "+" arithmetic | term
 term := factor "*" term | factor
+
+

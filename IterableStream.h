@@ -6,8 +6,6 @@
 #define DATA_PROCESSING_INTERMEDIATE_ITERABLESTREAM_H
 
 
-#include <utility>
-
 #include "Tokenizer.h"
 
 class IterableStream {
