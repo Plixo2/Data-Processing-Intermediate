@@ -20,6 +20,9 @@ public:
     Token current() {
         return v->at(index);
     }
+    uint64_t indexAt() {
+        return index;
+    }
     bool hasEntriesLeft() {
         return index < v->size();
     }

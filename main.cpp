@@ -3,31 +3,45 @@
 #include "Tokenizer.h"
 #include "IterableStream.h"
 #include "DPI_Syntax.h"
-#include "Lexer.h"
-#include "Vm.h"
+#include "LexerC.h"
+//#include "LexerC.h"
 
-
-void printBT(const std::string& prefix, const  Lexer::Node* node, bool isLeft)
-{
-    if( node != nullptr )
-    {
+/*
+void printBT(const std::string &prefix, const Lexer::Node *node, bool isLeft) {
+    if (node != nullptr) {
         std::cout << prefix;
 
-        std::cout << (isLeft ? "|--" : "L--" );
+        std::cout << (isLeft ? "|--" : "L--");
 
         // print the value of the node
-        std::cout <<  LexNode::NAMES[node->lex_type] << ": " << node->data << std::endl;
+        std::cout << LexNode::NAMES[node->lex_type] << ": " << node->data << std::endl;
 
         // enter the next tree level - left and right branch
-        if(node->childs.size() >= 1) {
-            for(int i = 0; i < node->childs.size()-1; i++) {
-                printBT( prefix + (isLeft ? "|   " : "    "), node->childs[i], true);
+        if (node->childs.size() >= 1) {
+            for (int i = 0; i < node->childs.size() - 1; i++) {
+                printBT(prefix + (isLeft ? "|   " : "    "), node->childs[i], true);
             }
-            printBT( prefix + (isLeft ? "|   " : "    "), node->childs[node->childs.size()-1], false);
+            printBT(prefix + (isLeft ? "|   " : "    "), node->childs[node->childs.size() - 1], false);
 
         }
     }
 }
+*/
+
+void printBT2(const std::string &prefix, const SyntaxNode *node, bool isLeft) {
+    if (node != nullptr) {
+        std::cout << prefix;
+
+        std::cout << (isLeft ? "|--" : "L--");
+
+
+        std::cout << LexNode::NAMES[node->lex_type] << ": " << node->data << std::endl;
+
+        printBT2(prefix + (isLeft ? "|   " : "    "), node->left, true);
+        printBT2(prefix + (isLeft ? "|   " : "    "), node->right, false);
+    }
+}
+
 
 int main() {
     //Interpreter::feed();
@@ -38,6 +52,8 @@ int main() {
     caps.push_back(Syntax::BRACES_CLOSED);
     caps.push_back(Syntax::PARENTHESES_OPEN);
     caps.push_back(Syntax::PARENTHESES_CLOSED);
+    caps.push_back(Syntax::BRACKET_CLOSED);
+    caps.push_back(Syntax::BRACKET_OPEN);
     caps.push_back(Syntax::A_PLUS);
     caps.push_back(Syntax::A_MINUS);
     caps.push_back(Syntax::A_MULTIPLY);
@@ -65,6 +81,7 @@ int main() {
     caps.push_back(Syntax::ASSIGN);
     caps.push_back(Syntax::ARROW);
     caps.push_back(Syntax::SEPARATOR);
+    caps.push_back(Syntax::DOT);
     caps.push_back(Syntax::KEYWORD);
     caps.push_back(Syntax::NUMBER);
     caps.push_back(Syntax::COMMENT);
@@ -79,8 +96,8 @@ int main() {
 
 
     std::ifstream ifs("../files/test.txt");
-    std::string content( (std::istreambuf_iterator<char>(ifs) ),
-                         (std::istreambuf_iterator<char>()    ) );
+    std::string content((std::istreambuf_iterator<char>(ifs)),
+                        (std::istreambuf_iterator<char>()));
 
     std::string str = content;
     std::cout << str << std::endl;
@@ -98,21 +115,29 @@ int main() {
 
     IterableStream iterableStream(&filtered);
     uint64_t i = 3;
+    uint64_t index = 0;
     while (iterableStream.hasEntriesLeft()) {
         const Token &current = iterableStream.current();
-        std::cout << current.type << " | " << current.raw_string << std::endl;
+        std::cout << index << ":  " << current.type << " | " << current.raw_string << std::endl;
         i += current.type * i;
         iterableStream.consume();
+        index++;
     }
     std::cout << "h: " << i % 10001 << std::endl;
 
     iterableStream.reset();
-    Lexer::Lexer lexer(&iterableStream);
+
+    /*Lexer::Lexer lexer(&iterableStream);
     Lexer::Node *pNode = lexer.topLevelNode();
-
     printBT("", pNode, false);
-
     delete pNode;
+    delete stream;*/
+
+    LexerC lexer(&iterableStream);
+    SyntaxNode *top = lexer.topLevel();
+    printBT2("", top, false);
+
+    delete top;
     delete stream;
 
     return 0;

@@ -1,28 +1,44 @@
 toplvl := "static" staticBlock | "struct" structBlock
 
-staticBlock := idDef "{" idDef "=" functionDef statement "}"
-structBlock := idDef "{" definitions "}"
+staticBlock := idDef "{" staticList "}"
+structBlock := idDef "{" definitionsList "}"
+
+
+staticList := staticFunction staticList | staticFunction "}"
+staticFunction := functionDef statement
 
 statement := blockStatement | flowStatement | normalStatement
 blockStatement := "{" blockStatementList
 blockStatementList := statement "}" | statement blockStatementList
 
-flowStatement := "if" expression statement | "if" expression statement "else" statement | "for" statement expression statement statement
+flowStatement := "if" _if | "for" _for
 normalStatement := varAssignment | varDefinition | varCall
 
+_if :=  expression statement | expression statement "else" statement
+_for := statement expression statement statement
 
 
-definitions := varDefinition | functionDef
+definitionsList := definitions "}" | definitions definitionsList
+definitions := varDefinitionShort | functionDefShort
 
+varDefinitionShort := typeDef idDef
 varDefinition := typeDef idDef "=" expression
 varAssignment := varTerminal "=" expression
 varCall := member "(" argList ")"
 
+
 outDefinitions := typeDef
-inputDefinitions := "(" inputDefs ")" 
+
+inputDefinitionsShort := "(" inputDefs ")"
+inputDefsShort := typeDef "," inputDefsShort | typeDef idDef
+functionDefShort := "fn" idDef inputDefinitionsShort "->" outDefinitions
+
+inputDefinitions := "(" inputDefs ")"
 inputDefs := typeDef idDef "," inputDefs | typeDef idDef
 
 functionDef := "fn" idDef inputDefinitions "->" outDefinitions
+
+
 typeDef := "keyword" "[" "]" | "keyword"
 idDef := "keyword"
 

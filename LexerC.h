@@ -51,15 +51,20 @@ public:
     SyntaxNode *normalStatement();
 
     SyntaxNode *definitions();
+    SyntaxNode *definitionsList();
 
     SyntaxNode *varDefinition();
+    SyntaxNode *varDefinitionShort();
     SyntaxNode *varAssignment();
     SyntaxNode *varCall();
 
     SyntaxNode *outDefinitions();
     SyntaxNode *inputDefinitions();
     SyntaxNode *inputDefs();
+    SyntaxNode *inputDefinitionsShort();
+    SyntaxNode *inputDefsShort();
 
+    SyntaxNode *functionDefShort();
     SyntaxNode *functionDef();
     SyntaxNode *typeDef();
     SyntaxNode *idDef();
@@ -68,6 +73,14 @@ public:
     SyntaxNode *member();
     SyntaxNode *varTerminal();
     SyntaxNode *arrayInitializer();
+
+    SyntaxNode *staticList();
+    SyntaxNode *staticFunction();
+
+    SyntaxNode *_if();
+    SyntaxNode *_for();
+
+
 
     SyntaxNode *expression();
 
