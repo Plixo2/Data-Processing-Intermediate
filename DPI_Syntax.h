@@ -111,7 +111,7 @@ namespace LexNode {
     extern const uint8_t FACTOR;
     extern const uint8_t MEMBER;
     extern const uint8_t VAR_TERMINAL;
-    extern const uint8_t FLOAT_CONSTANT;
+    extern const uint8_t ARRAY_INIT;
     extern const uint8_t INT_CONSTANT;
     extern const uint8_t ADDITION;
     extern const uint8_t UNARY;

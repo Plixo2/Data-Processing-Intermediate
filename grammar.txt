@@ -55,12 +55,12 @@ factor := "(" expression ")" |
 			"-" factor |
 			"+" factor |
 			"!" factor
-			"number" |
+			number |
 			"false"  |
 			"true" |
 			arrayInitializer |
 			member
-
+number := "number"
 
 boolArithmetic := comparisonArithmetic "&&" boolArithmetic | comparisonArithmetic
 comparisonArithmetic := arithmetic "<=" comparisonArithmetic | arithmetic

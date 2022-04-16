@@ -17,31 +17,31 @@
 #define BEGIN(_type) blockStack.push(LexNode::_type)
 #define THEN(_node) SyntaxNode *_node = this->_node()
 
-#define TRACE(excptstr)  excptstr += "\ntrace: \n"; \
-for (int i = 0; i < blockStack.size(); ++i) { \
-excptstr += std::to_string(blockStack.top()); \
+#define TRACE(excptstr)  excptstr += ":\n"; \
+int n = blockStack.size();                                               \
+for (int i = 0; i < n; ++i) { \
+excptstr += LexNode::NAMES[blockStack.top()]; \
 excptstr += " \n"; \
 blockStack.pop(); \
 }
 
-#define END std::string excptstr = "Assertion fail. found "; \
+#define END std::string excptstr = "\nAssertion fail. found "; \
 excptstr += std::to_string(token_stream->current().type);\
 excptstr += " in block ";\
-excptstr += std::to_string(blockStack.top());                \
+excptstr += LexNode::NAMES[blockStack.top()];                \
 TRACE(excptstr)               \
 throw AssertionException(&excptstr)
 
 #define ASSERT(_type) if((_type).type != token_stream->current().type) { \
-    std::string excptstr = "Assertion fail. found "; \
+    std::string excptstr = "\nAssertion fail. found "; \
     excptstr += std::to_string(token_stream->current().type);                              \
     excptstr += ", but expected ";\
     excptstr += std::to_string(_type.type);                              \
     excptstr += " in block ";\
-    excptstr += std::to_string(blockStack.top());                        \
+    excptstr += LexNode::NAMES[blockStack.top()];                        \
     TRACE(excptstr)                                                                     \
     throw AssertionException(&excptstr);       \
 } else {  NEXT; }
-
 
 
 std::stack<uint8_t> blockStack;
@@ -200,12 +200,13 @@ SyntaxNode *LexerC::_if() {
     MATCH(Syntax::ELSE) {
         NEXT;
         SyntaxNode *elseBody = createNode(LexNode::ELSE_BODY, this->statement());
-        FINISH_BI(body,elseBody);
+        FINISH_BI(body, elseBody);
     }
     FINISH(body);
-    
+
     END;
 }
+
 SyntaxNode *LexerC::_for() {
     return nullptr;
 }
@@ -346,13 +347,21 @@ SyntaxNode *LexerC::idDef() {
     END;
 }
 
+SyntaxNode *LexerC::number() {
+    BEGIN(NUMBER);
+    REMEMBER(literal);
+    ASSERT(Syntax::NUMBER);
+    FINISH_LEAF(literal);
+    END;
+}
+
 SyntaxNode *LexerC::argList() {
     BEGIN(CALL_ARGUMENTS);
 
     THEN(expression);
     MATCH(Syntax::SEPARATOR) {
         THEN(argList);
-        FINISH_BI(expression , argList);
+        FINISH_BI(expression, argList);
     }
     FINISH(expression);
 
@@ -366,11 +375,9 @@ SyntaxNode *LexerC::member() {
     MATCH(Syntax::DOT) {
         NEXT;
         THEN(member);
-        FINISH_BI(varTerminal,member);
+        FINISH_BI(varTerminal, member);
     }
     FINISH(varTerminal);
-
-
     END;
 }
 
@@ -382,12 +389,12 @@ SyntaxNode *LexerC::varTerminal() {
         NEXT;
         THEN(argList);
         ASSERT(Syntax::PARENTHESES_CLOSED);
-        FINISH_BI(idDef,argList);
+        FINISH_BI(idDef, argList);
     } else MATCH(Syntax::BRACKET_OPEN) {
         NEXT;
         THEN(expression);
         ASSERT(Syntax::BRACKET_CLOSED);
-        FINISH_BI(idDef,expression);
+        FINISH_BI(idDef, expression);
     }
     FINISH(idDef);
 
@@ -395,7 +402,15 @@ SyntaxNode *LexerC::varTerminal() {
 }
 
 SyntaxNode *LexerC::arrayInitializer() {
-    return nullptr;
+    BEGIN(ARRAY_INIT);
+
+    ASSERT(Syntax::BRACKET_OPEN);
+    THEN(argList);
+    ASSERT(Syntax::BRACKET_CLOSED);
+    FINISH(argList);
+
+
+    END;
 }
 
 SyntaxNode *LexerC::expression() {
@@ -411,10 +426,10 @@ SyntaxNode *LexerC::boolArithmetic() {
     BEGIN(BOOL_EXPRESSION);
 
     THEN(comparisonArithmetic);
-    if(TYPEOF(Syntax::B_AND)) {
+    if (TYPEOF(Syntax::B_AND)) {
         NEXT;
         THEN(boolArithmetic);
-        FINISH_BI(comparisonArithmetic , boolArithmetic);
+        FINISH_BI(comparisonArithmetic, boolArithmetic);
     }
     FINISH(comparisonArithmetic);
 
@@ -425,10 +440,10 @@ SyntaxNode *LexerC::comparisonArithmetic() {
     BEGIN(COMPARISON_EXPRESSION);
 
     THEN(arithmetic);
-    if(TYPEOF(Syntax::SMALLER_EQUAL)) {
+    if (TYPEOF(Syntax::SMALLER_EQUAL)) {
         NEXT;
         THEN(comparisonArithmetic);
-        FINISH_BI(arithmetic , comparisonArithmetic);
+        FINISH_BI(arithmetic, comparisonArithmetic);
     }
     FINISH(arithmetic);
 
@@ -439,10 +454,10 @@ SyntaxNode *LexerC::arithmetic() {
     BEGIN(ARITHMETIC);
 
     THEN(term);
-    if(TYPEOF(Syntax::A_PLUS)) {
+    if (TYPEOF(Syntax::A_PLUS)) {
         NEXT;
         THEN(arithmetic);
-        FINISH_BI(term , arithmetic);
+        FINISH_BI(term, arithmetic);
     }
     FINISH(term);
 
@@ -452,13 +467,13 @@ SyntaxNode *LexerC::arithmetic() {
 SyntaxNode *LexerC::term() {
     BEGIN(TERM);
 
-    THEN(factor);
-    if(TYPEOF(Syntax::A_MULTIPLY)) {
+    SyntaxNode *left = factor();
+    while (TYPEOF(Syntax::A_MULTIPLY)) {
         NEXT;
-        THEN(term);
-        FINISH_BI(factor , term);
+        SyntaxNode *right = factor();
+        left = createBiNode(LexNode::A_MULTIPLY,left, right);
     }
-    FINISH(factor);
+    FINISH(left);
 
     END;
 }
@@ -466,11 +481,47 @@ SyntaxNode *LexerC::term() {
 SyntaxNode *LexerC::factor() {
     BEGIN(FACTOR);
 
-    THEN(member);
-    FINISH(member);
+    MATCH(Syntax::PARENTHESES_OPEN) {
+        NEXT;
+        THEN(expression);
+        ASSERT(Syntax::PARENTHESES_CLOSED);
+        FINISH(expression);
+    } else MATCH(Syntax::A_MINUS) {
+        NEXT;
+        THEN(factor);
+        SyntaxNode *node = createNode(LexNode::UNARY, factor);
+        FINISH(node);
+    } else MATCH(Syntax::A_PLUS) {
+        NEXT;
+        THEN(factor);
+        FINISH(factor);
+    } else MATCH(Syntax::B_NOT) {
+        NEXT;
+        THEN(factor);
+        SyntaxNode *node = createNode(LexNode::B_NOT, factor);
+        FINISH(node);
+    }else MATCH(Syntax::NUMBER) {
+        THEN(number);
+        FINISH(number);
+    } else MATCH(Syntax::FALSE) {
+        NEXT;
+        SyntaxNode *node = createLeaf(LexNode::NUMBER,"0");
+        FINISH(node);
+    } else MATCH(Syntax::TRUE) {
+        NEXT;
+        SyntaxNode *node = createLeaf(LexNode::NUMBER,"1");
+        FINISH(node);
+    } else MATCH(Syntax::BRACKET_OPEN) {
+        THEN(arrayInitializer);
+        FINISH(arrayInitializer);
+    } else MATCH(Syntax::KEYWORD) {
+        THEN(member);
+        FINISH(member);
+    }
 
     END;
 }
+
 
 SyntaxNode *LexerC::inputDefinitionsShort() {
     BEGIN(INPUT_DEFINITIONS);

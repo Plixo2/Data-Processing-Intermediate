@@ -1,6 +1,8 @@
 static Block {
     fn a (type abc, type b) -> void {
-        if a.b[uuu] {
+        if a[c].b(uuu) * 4 {
+
+        } else {
 
         }
     }

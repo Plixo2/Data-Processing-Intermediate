@@ -108,7 +108,7 @@ namespace LexNode {
     const uint8_t FACTOR = 20;
     const uint8_t MEMBER = 21;
     const uint8_t VAR_TERMINAL = 22;
-    const uint8_t FLOAT_CONSTANT = 23;
+    const uint8_t ARRAY_INIT = 23;
     const uint8_t INT_CONSTANT = 24;
     const uint8_t ADDITION = 25;
     const uint8_t UNARY = 26;
@@ -183,7 +183,7 @@ namespace LexNode {
             "FACTOR",
             "MEMBER",
             "VAR_TERMINAL",
-            "FLOAT_CONSTANT",
+            "ARRAY_INIT",
             "INT_CONSTANT",
             "ADDITION",
             "UNARY",

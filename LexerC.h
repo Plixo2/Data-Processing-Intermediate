@@ -68,6 +68,7 @@ public:
     SyntaxNode *functionDef();
     SyntaxNode *typeDef();
     SyntaxNode *idDef();
+    SyntaxNode *number();
 
     SyntaxNode *argList();
     SyntaxNode *member();
