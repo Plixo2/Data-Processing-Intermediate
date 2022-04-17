@@ -4,6 +4,7 @@
 #include "IterableStream.h"
 #include "DPI_Syntax.h"
 #include "LexerC.h"
+#include "Translator.h"
 //#include "LexerC.h"
 
 /*
@@ -87,6 +88,7 @@ int main() {
     caps.push_back(Syntax::COMMENT);
     caps.push_back(Syntax::LINE_COMMENT);
     caps.push_back(Syntax::WHITESPACE);
+    caps.push_back(Syntax::END_OF_STATEMENT);
 
     Tokenizer tokenizer(caps);
 //    plus , minus , div , mul , pow , mod
@@ -136,6 +138,9 @@ int main() {
     LexerC lexer(&iterableStream);
     SyntaxNode *top = lexer.topLevel();
     printBT2("", top, false);
+
+    Translator translator;
+    translator.translate(top);
 
     delete top;
     delete stream;

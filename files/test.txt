@@ -1,10 +1,6 @@
 static Block {
-    fn a (type abc, type b) -> void {
-        if a[c].b(uuu) * 4 {
-
-        } else {
-
-        }
+    fn a () -> void {
+        int a = 2 * 1
     }
 }
 struct name {

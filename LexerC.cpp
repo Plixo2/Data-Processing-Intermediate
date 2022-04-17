@@ -138,9 +138,15 @@ SyntaxNode *LexerC::statement() {
     } else if (TYPEOF(Syntax::FOR) || TYPEOF(Syntax::IF)) {
         THEN(flowStatement);
         FINISH(flowStatement);
-    } else {
+    } else MATCH(Syntax::KEYWORD) {
         THEN(normalStatement);
         FINISH(normalStatement);
+    } else MATCH(Syntax::BRACES_CLOSED) {
+        SyntaxNode *node = empty(LexNode::EMPTY_STATEMENT);
+        FINISH(node);
+    }
+    MATCH(Syntax::END_OF_STATEMENT) {
+        NEXT;
     }
     END;
 }
@@ -159,6 +165,7 @@ SyntaxNode *LexerC::blockStatement() {
 SyntaxNode *LexerC::blockStatementList() {
     BEGIN(STATEMENT_LIST);
 
+
     THEN(statement);
     MATCH(Syntax::BRACES_CLOSED) {
         NEXT;
@@ -174,7 +181,6 @@ SyntaxNode *LexerC::blockStatementList() {
 SyntaxNode *LexerC::flowStatement() {
     BEGIN(FLOW_STATEMENT);
 
-
     MATCH(Syntax::IF) {
         THEN(_if);
         FINISH(_if);
@@ -187,7 +193,53 @@ SyntaxNode *LexerC::flowStatement() {
 }
 
 SyntaxNode *LexerC::normalStatement() {
-    return nullptr;
+    BEGIN(SINGLE_STATEMENT);
+
+    THEN(member);
+    MATCH(Syntax::ASSIGN) {
+        THEN(expression);
+        SyntaxNode *node = createBiNode(LexNode::VAR_ASSIGNMENT, member, expression);
+        FINISH(node);
+    } else MATCH(Syntax::KEYWORD) {
+        THEN(idDef);
+        SyntaxNode *typeAndID = createBiNode(LexNode::TYPE_AND_ID, member, idDef);
+        ASSERT(Syntax::ASSIGN);
+        THEN(expression);
+        SyntaxNode *create = createBiNode(LexNode::VAR_DEFINITION, typeAndID, expression);
+        FINISH(create);
+    }
+    FINISH(member);
+
+    END;
+}
+
+SyntaxNode *LexerC::varDefinition() {
+    BEGIN(VAR_DEFINITION);
+
+    THEN(typeDef);
+    THEN(idDef);
+    SyntaxNode *typeAndID = createBiNode(LexNode::TYPE_AND_ID, typeDef, idDef);
+    ASSERT(Syntax::ASSIGN);
+    THEN(expression);
+    FINISH_BI(expression, typeAndID);
+
+    END;
+}
+
+
+SyntaxNode *LexerC::varAssignment() {
+    BEGIN(VAR_ASSIGNMENT);
+
+
+
+    END;
+}
+
+SyntaxNode *LexerC::varCall() {
+    BEGIN(VAR_CALL);
+
+
+    END;
 }
 
 SyntaxNode *LexerC::_if() {
@@ -247,26 +299,7 @@ SyntaxNode *LexerC::varDefinitionShort() {
     END;
 }
 
-SyntaxNode *LexerC::varDefinition() {
-    BEGIN(VAR_DEFINITION);
 
-    THEN(typeDef);
-    THEN(idDef);
-    SyntaxNode *typeAndID = createBiNode(LexNode::TYPE_AND_ID, typeDef, idDef);
-    ASSERT(Syntax::ASSIGN);
-    THEN(expression);
-    FINISH_BI(expression, typeAndID);
-
-    END;
-}
-
-SyntaxNode *LexerC::varAssignment() {
-    return nullptr;
-}
-
-SyntaxNode *LexerC::varCall() {
-    return nullptr;
-}
 
 SyntaxNode *LexerC::outDefinitions() {
     BEGIN(OUTPUT_DEFINITION);
@@ -281,6 +314,10 @@ SyntaxNode *LexerC::inputDefinitions() {
     BEGIN(INPUT_DEFINITIONS);
 
     ASSERT(Syntax::PARENTHESES_OPEN)
+    MATCH(Syntax::PARENTHESES_CLOSED) {
+        NEXT;
+        FINISH(empty(LexNode::EMPTY_INPUT));
+    }
     THEN(inputDefs);
     ASSERT(Syntax::PARENTHESES_CLOSED)
     FINISH(inputDefs);
@@ -358,6 +395,9 @@ SyntaxNode *LexerC::number() {
 SyntaxNode *LexerC::argList() {
     BEGIN(CALL_ARGUMENTS);
 
+    MATCH(Syntax::PARENTHESES_CLOSED) {
+        FINISH(empty(LexNode::CALL_ARGUMENTS));
+    }
     THEN(expression);
     MATCH(Syntax::SEPARATOR) {
         THEN(argList);
@@ -480,6 +520,7 @@ SyntaxNode *LexerC::term() {
 
 SyntaxNode *LexerC::factor() {
     BEGIN(FACTOR);
+
 
     MATCH(Syntax::PARENTHESES_OPEN) {
         NEXT;

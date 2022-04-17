@@ -49,6 +49,7 @@ namespace Syntax {
     Token_Capture COMMENT = {42, R"(^/)", R"(^//.*$)", R"(^//)"};
     Token_Capture LINE_COMMENT = {43, R"(^;)", R"(^;$)", R"(^;)"};
     Token_Capture EOL = {44, "\\n", "\\n", ""};
+    Token_Capture END_OF_STATEMENT = {45, R"(^;)", R"(^;$)", R"(^;)"};
 }
 
 namespace IRCode {
@@ -94,8 +95,8 @@ namespace LexNode {
     const uint8_t CALL_ARGUMENTS = 6;
     const uint8_t BRANCH_POSITIVE = 7;
     const uint8_t BRANCH_NEGATIVE = 8;
-    const uint8_t BRANCH = 9;
-    const uint8_t FUNCTION_INPUT = 10;
+    const uint8_t EMPTY_EXPRESSION = 9;
+    const uint8_t EMPTY_INPUT = 10;
     const uint8_t FUNCTION_IO = 11;
     const uint8_t FUNCTION_OUTPUT = 12;
     const uint8_t IDENTIFIER = 13;
@@ -109,7 +110,7 @@ namespace LexNode {
     const uint8_t MEMBER = 21;
     const uint8_t VAR_TERMINAL = 22;
     const uint8_t ARRAY_INIT = 23;
-    const uint8_t INT_CONSTANT = 24;
+    const uint8_t EMPTY_STATEMENT = 24;
     const uint8_t ADDITION = 25;
     const uint8_t UNARY = 26;
     const uint8_t NUMBER = 27;
@@ -169,8 +170,8 @@ namespace LexNode {
             "CALL_ARGUMENTS",
             "BRANCH_POSITIVE",
             "BRANCH_NEGATIVE",
-            "BRANCH",
-            "FUNCTION_INPUT",
+            "EMPTY_EXPRESSION",
+            "EMPTY_INPUT",
             "FUNCTION_IO",
             "FUNCTION_OUTPUT",
             "IDENTIFIER",
@@ -184,7 +185,7 @@ namespace LexNode {
             "MEMBER",
             "VAR_TERMINAL",
             "ARRAY_INIT",
-            "INT_CONSTANT",
+            "EMPTY_STATEMENT",
             "ADDITION",
             "UNARY",
             "NUMBER",

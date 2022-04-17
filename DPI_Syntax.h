@@ -52,6 +52,7 @@ namespace Syntax {
     extern Token_Capture COMMENT;
     extern Token_Capture LINE_COMMENT;
     extern Token_Capture EOL;
+    extern Token_Capture END_OF_STATEMENT;
     // Token_Capture END_OF_STATEMENT = {35, R"(^;)", R"(^;$)", R"(^;)"};
 }
 
@@ -97,8 +98,8 @@ namespace LexNode {
     extern const uint8_t CALL_ARGUMENTS;
     extern const uint8_t BRANCH_POSITIVE;
     extern const uint8_t BRANCH_NEGATIVE;
-    extern const uint8_t BRANCH;
-    extern const uint8_t FUNCTION_INPUT;
+    extern const uint8_t EMPTY_EXPRESSION;
+    extern const uint8_t EMPTY_INPUT;
     extern const uint8_t FUNCTION_IO;
     extern const uint8_t FUNCTION_OUTPUT;
     extern const uint8_t IDENTIFIER;
@@ -112,7 +113,7 @@ namespace LexNode {
     extern const uint8_t MEMBER;
     extern const uint8_t VAR_TERMINAL;
     extern const uint8_t ARRAY_INIT;
-    extern const uint8_t INT_CONSTANT;
+    extern const uint8_t EMPTY_STATEMENT;
     extern const uint8_t ADDITION;
     extern const uint8_t UNARY;
     extern const uint8_t NUMBER;
