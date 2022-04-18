@@ -3,8 +3,11 @@
 //
 
 #include <stack>
+#include <unordered_map>
+#include <string>
 #include "Translator.h"
 #include "DPI_Syntax.h"
+
 
 class TranslatorAssertionException : public std::exception {
     const char *text;
@@ -33,6 +36,7 @@ typedef struct _snapshot {
     }
 } Snapshot;
 
+#define SIZEOF_SCOPE (sizeof(Register) * MAX_REGISTERS)
 
 std::stack<Snapshot *> stack;
 
@@ -61,16 +65,13 @@ void sync(Snapshot *snapshot) {
 
 void push() {
     auto *snapshot = new Snapshot{};
-    snapshot->registers = static_cast<Register *>(malloc(sizeof(Register) * MAX_REGISTERS));
+    snapshot->registers = static_cast<Register *>(malloc(SIZEOF_SCOPE));
     for (uint64_t i = 0; i < MAX_REGISTERS; ++i) {
         snapshot->registers[i] = Register{i};
     }
-    if (!stack.empty()) {
-        sync(snapshot);
-    }
+    sync(snapshot);
     stack.push(snapshot);
 }
-
 
 void pop() {
     delete stack.top();
@@ -101,41 +102,86 @@ throw TranslatorAssertionException("error lol");\
 
 #define DOWN(_type) GET(_type,ast)
 
-void translateBoolExpression(SyntaxNode *ast) {
-    push();
+typedef struct {
+    std::string name;
+    std::string type;
+} Var;
 
-
-    pop();
+namespace std {
+    template<>
+    struct hash<Var> {
+        size_t operator()(const Var &k) {
+            return std::hash<std::string>{}(k.name);
+        }
+    };
 }
 
-void translateExpression(SyntaxNode *ast) {
-    push();
-    TYPE(BOOL_EXPRESSION) {
-        DOWN(BOOL_EXPRESSION);
-        DOWN(COMPARISON_EXPRESSION);
-        DOWN(ARITHMETIC);
-        DOWN(TERM);
-        TYPE(A_MULTIPLY) {
 
-        }
+typedef struct {
+    std::unordered_map<Var, uint8_t> variables;
+} FunctionScope;
+
+std::stack<FunctionScope *> functionStack;
+
+Register *translateFactor(SyntaxNode *ast) {
+    if(ast->lex_type == LexNode::NUMBER) {
+
+        return makeNumber(ast->data.);
     }
+    return nullptr;
+}
+Register translateNumber(SyntaxNode *ast) {
 
-    pop();
+    if(ast->data.find('.') != std::string::npos) {
+
+    }
 }
 
-void translateStatement(SyntaxNode *ast) {
-    push();
+Register *makeNumber(int64_t number) {
+    auto *ptr = useNew();
+    //make instruction
+    //add({IRCode::LOAD_CONST_INT,ptr->index});
+    //add(number);
+    return ptr;
+}
 
-    TYPE(SINGLE_STATEMENT) {
-        DOWN(SINGLE_STATEMENT);
-        TYPE(VAR_DEFINITION) {
-            DOWN(VAR_DEFINITION);
-            DOWN(EXPRESSION);
-            translateExpression(ast);
-        }
+Register *makeAdd(Register *a, Register *b) {
+    auto *ptr = useNew();
+    //make instruction
+    //add({IRCode::A_ADD,a->index , b->index,ptr->index});
+    return ptr;
+}
+
+Register *translateMul(SyntaxNode *ast) {
+    push();
+    auto *left = translateFactor(ast->left);
+    auto *right = translateFactor(ast->right);
+    pop();
+
+    auto *add = makeAdd(left, right);
+    return add;
+}
+
+FunctionScope *makeFunction(std::vector<Var> *variables) {
+    auto *scope = new FunctionScope;
+
+    auto *baseScope = new Snapshot{};
+    baseScope->registers = static_cast<Register *>(malloc(SIZEOF_SCOPE));
+    for (uint64_t i = 0; i < MAX_REGISTERS; ++i) {
+        baseScope->registers[i] = Register{i};
     }
 
-    pop();
+    uint64_t size = variables->size();
+    for (int i = 0; i < size; ++i) {
+        Var &at = variables->at(i);
+        scope->variables[at] = i;
+        use(&baseScope->registers[i]);
+    }
+
+    stack.push(baseScope);
+    functionStack.push(scope);
+
+    return scope;
 }
 
 

@@ -1,0 +1,14 @@
+//
+// Created by Mo on 18.04.2022.
+//
+
+#ifndef DATA_PROCESSING_INTERMEDIATE_IRGEN_H
+#define DATA_PROCESSING_INTERMEDIATE_IRGEN_H
+
+
+class IRGen {
+
+};
+
+
+#endif //DATA_PROCESSING_INTERMEDIATE_IRGEN_H
