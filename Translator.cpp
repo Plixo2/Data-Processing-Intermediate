@@ -5,8 +5,11 @@
 #include <stack>
 #include <unordered_map>
 #include <string>
+#include <set>
 #include "Translator.h"
-#include "DPI_Syntax.h"
+#include "DPI_Types.h"
+
+using namespace types;
 
 
 class TranslatorAssertionException : public std::exception {
@@ -22,19 +25,10 @@ public:
     explicit TranslatorAssertionException(const char *text) : text(text) {}
 };
 
-typedef struct {
-    uint64_t index;
-    bool isUsed;
-} Register;
+
 
 uint64_t MAX_REGISTERS = 256;
-typedef struct _snapshot {
-    Register *registers;
 
-    ~_snapshot() {
-        delete registers;
-    }
-} Snapshot;
 
 #define SIZEOF_SCOPE (sizeof(Register) * MAX_REGISTERS)
 
@@ -67,7 +61,7 @@ void push() {
     auto *snapshot = new Snapshot{};
     snapshot->registers = static_cast<Register *>(malloc(SIZEOF_SCOPE));
     for (uint64_t i = 0; i < MAX_REGISTERS; ++i) {
-        snapshot->registers[i] = Register{i};
+        snapshot->registers[i] = Register{(uint8_t) i};
     }
     sync(snapshot);
     stack.push(snapshot);
@@ -86,9 +80,6 @@ void closeStack() {
     }
 }
 
-void move(Register *dest, Register *loc) {
-
-}
 
 #define TYPE(_type) if(ast->lex_type == (LexNode::_type))
 
@@ -102,31 +93,20 @@ throw TranslatorAssertionException("error lol");\
 
 #define DOWN(_type) GET(_type,ast)
 
-typedef struct {
-    std::string name;
-    std::string type;
-} Var;
-
-namespace std {
-    template<>
-    struct hash<Var> {
-        size_t operator()(const Var &k) {
-            return std::hash<std::string>{}(k.name);
-        }
-    };
+std::vector<FunctionPrototype> functions;
+std::vector<Constant> constants;
+std::vector<Instruction> instructions;
+void add(Instruction i) {
+    instructions.push_back(i);
 }
 
-
-typedef struct {
-    std::unordered_map<Var, uint8_t> variables;
-} FunctionScope;
-
 std::stack<FunctionScope *> functionStack;
+
 
 Register *translateFactor(SyntaxNode *ast) {
     if(ast->lex_type == LexNode::NUMBER) {
 
-        return makeNumber(ast->data.);
+      //  return makeNumber(2);
     }
     return nullptr;
 }
@@ -137,18 +117,33 @@ Register translateNumber(SyntaxNode *ast) {
     }
 }
 
+int64_t findConst(int64_t num) {
+    uint64_t size = constants.size();
+    for (int i = 0; i < size; ++i)  {
+        if (constants[i].type == CONST_INT &&  constants[i].value.as_int == num) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 Register *makeNumber(int64_t number) {
     auto *ptr = useNew();
-    //make instruction
-    //add({IRCode::LOAD_CONST_INT,ptr->index});
-    //add(number);
+    int64_t foundConst = findConst(number);
+    if(foundConst == -1) {
+        constants.push_back({CONST_INT,number});
+        foundConst = (int64_t)constants.size()-1;
+    }
+    add({IRCode::LOAD_CONST,ptr->index});
+    Instruction i = {};
+    i.as_int = (int32_t)foundConst;
+    add(i);
     return ptr;
 }
 
 Register *makeAdd(Register *a, Register *b) {
     auto *ptr = useNew();
-    //make instruction
-    //add({IRCode::A_ADD,a->index , b->index,ptr->index});
+    add({IRCode::ADD,a->index , b->index,ptr->index});
     return ptr;
 }
 
@@ -168,7 +163,7 @@ FunctionScope *makeFunction(std::vector<Var> *variables) {
     auto *baseScope = new Snapshot{};
     baseScope->registers = static_cast<Register *>(malloc(SIZEOF_SCOPE));
     for (uint64_t i = 0; i < MAX_REGISTERS; ++i) {
-        baseScope->registers[i] = Register{i};
+        baseScope->registers[i] = Register{(uint8_t)i};
     }
 
     uint64_t size = variables->size();
@@ -177,6 +172,8 @@ FunctionScope *makeFunction(std::vector<Var> *variables) {
         scope->variables[at] = i;
         use(&baseScope->registers[i]);
     }
+    FunctionPrototype proto {};
+    functions.push_back(proto);
 
     stack.push(baseScope);
     functionStack.push(scope);
@@ -187,9 +184,7 @@ FunctionScope *makeFunction(std::vector<Var> *variables) {
 
 void Translator::translate(SyntaxNode *ast) {
     push();
-    Register *a = useNew();
-    Register *b = useNew();
-    move(a, b);
+
 
     pop();
 

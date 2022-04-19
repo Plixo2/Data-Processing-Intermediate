@@ -7,6 +7,8 @@
 
 #include "LexerC.h"
 
+
+
 class Translator {
 public:
     void translate(SyntaxNode *ast);

@@ -7,70 +7,22 @@
 #include <cmath>
 #include <sstream>
 #include <chrono>
-#include "DPI_Syntax.h"
+#include <iostream>
+#include "DPI_Types.h"
 #include "Math.h"
 
 #define Register(index) record_stack[activation_record_pointer+(index)]
 #define Push(obj) {call_stack[stack_pointer++] = (obj);}
 #define Pop(obj) {(obj) = call_stack[--stack_pointer];}
 
+using namespace types;
+
 namespace Interpreter {
-    struct _objTable;
-    struct _prototype;
-    struct _funcProto;
-    typedef union {
-        dpi_float as_float;
-        dpi_int as_int;
-        _objTable *as_pointer;
-        _funcProto *as_function;
-    } Value;
 
-    typedef struct {
-        uint16_t type;
-        Value value;
-    } Object;
-
-
-    typedef union {
-        uint8_t u;
-        int8_t s;
-    } ByteField;
-
-    typedef struct {
-        uint8_t op;
-        uint8_t A;
-        uint8_t B;
-        uint8_t C;
-    } OpCode;
-
-    typedef union {
-        OpCode code;
-        int32_t as_int;
-    } Instruction;
-
-    typedef struct _funcProto {
-        uint8_t activation_records;
-        uint32_t instruction_location;
-    } FunctionProto;
-
-    typedef struct _prototype {
-        uint16_t members;
-        uint16_t type;
-        FunctionProto *constructors;
-    } Prototype;
-
-    typedef struct _objTable {
-        Object *members;
-        _prototype *prototype;
-
-        ~_objTable() {
-            delete members;
-        }
-    } ObjectTable;
 
     std::vector<ObjectTable *> object_pool;
 
-    Prototype *prototypes;
+    ObjectPrototype *prototypes;
     uint64_t max_prototypes;
 
 
@@ -113,7 +65,7 @@ namespace Interpreter {
         for (int i = 0; i < max_instructions; i++) {
             instructions[i] = {{IRCode::END_OF_CODE}};
         }
-        prototypes = (Prototype *) malloc(max_prototypes * sizeof(Prototype));
+        prototypes = (ObjectPrototype *) malloc(max_prototypes * sizeof(ObjectPrototype));
         constants = (Object *) malloc(max_constants * sizeof(Object));
     }
 
@@ -128,7 +80,7 @@ namespace Interpreter {
         // FunctionProto proto = {2, 6};
         // functional_prototypes[1] = proto;
 
-        Prototype protObj = {2, 1337};
+        ObjectPrototype protObj = {2, 1337};
         prototypes[1] = protObj;
 
         add({{IRCode::LOAD_CONST, 0, 0, 0}});
@@ -154,13 +106,13 @@ namespace Interpreter {
         Instruction i = instructions[pc];
         switch (i.code.op) {
             case IRCode::NEW: {
-                Prototype &proto = prototypes[((i.code.B << 8) | i.code.C)];
-                auto *members = (Object *) malloc(proto.members * sizeof(Object));
-                auto *obj = new ObjectTable{members, &proto};
+                ObjectPrototype *proto = Register(i.code.A).value.as_prototype;
+                auto *members = (Object *) malloc(proto->alloc_size * sizeof(Object));
+                auto *obj = new ObjectTable{members, proto};
                 object_pool.push_back(obj);
                 Object object;
                 object.type = proto.type;
-                object.value.as_pointer = obj;
+                object.value.as_object = obj;
                 Register(i.code.A) = object;
                 pc++;
                 break;
@@ -183,12 +135,12 @@ namespace Interpreter {
                 break;
             }
             case IRCode::LOAD_MEMBER: {
-                Register(i.code.A) = Register(i.code.B).value.as_pointer->members[i.code.C];
+                Register(i.code.A) = Register(i.code.B).value.as_object->members[i.code.C];
                 pc++;
                 break;
             }
             case IRCode::SET_MEMBER: {
-                Register(i.code.A).value.as_pointer->members[i.code.B] = Register(i.code.C);
+                Register(i.code.A).value.as_object->members[i.code.B] = Register(i.code.C);
                 pc++;
                 break;
             }
@@ -215,7 +167,7 @@ namespace Interpreter {
                 Push(pc + 1);
                 activation_record_pointer += active_record_size;
                 Push(active_record_size);
-                FunctionProto *proto = Register(i.code.A).value.as_function;
+                FunctionPrototype *proto = Register(i.code.A).value.as_function;
                 active_record_size = proto->activation_records;
                 pc = proto->instruction_location;
                 break;

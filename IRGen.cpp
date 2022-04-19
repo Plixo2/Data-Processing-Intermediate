@@ -3,3 +3,17 @@
 //
 
 #include "IRGen.h"
+namespace Gen {
+    Reg makeMove(Reg src, Reg dest) {
+        return nullptr;
+    }
+    Reg makeAdd(Reg a, Reg b) {
+        return nullptr;
+    }
+    Reg makeInt(uint64_t number) {
+        return nullptr;
+    }
+    Reg makeFloat(double number) {
+        return nullptr;
+    }
+}
