@@ -136,13 +136,16 @@ int main() {
     delete stream;*/
 
     LexerC lexer(&iterableStream);
-    SyntaxNode *top = lexer.topLevel();
-    printBT2("", top, false);
+    const std::vector<SyntaxNode *> &vector = lexer.entry();
+    for (SyntaxNode *item: vector) {
+        printBT2("", item, false);
+        delete item;
+    }
 
-    Translator translator;
-    translator.translate(top);
+    // Translator translator;
+    //translator.translate(top);
 
-    delete top;
+
     delete stream;
 
     return 0;

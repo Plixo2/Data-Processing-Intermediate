@@ -3,7 +3,6 @@
 //
 
 #include <stack>
-#include <unordered_map>
 #include <string>
 #include <set>
 #include "Translator.h"
@@ -11,7 +10,7 @@
 
 using namespace types;
 
-
+/*
 class TranslatorAssertionException : public std::exception {
     const char *text;
 
@@ -79,115 +78,148 @@ void closeStack() {
         stack.pop();
     }
 }
+*/
 
 
-#define TYPE(_type) if(ast->lex_type == (LexNode::_type))
+SyntaxNode *find(SyntaxNode *item, uint8_t type);
 
-#define GET(_name, _var) if(ast->left->lex_type == LexNode::_name) { \
-_var = ast->left;\
-} else if(ast->right->lex_type == LexNode::_name) {\
-_var = ast->right;\
-} else {\
-throw TranslatorAssertionException("error lol");\
+SyntaxNode *any(SyntaxNode *item);
+
+void Translator::buildPrototypes() {
+    for (SyntaxNode *item: ast) {
+        SyntaxNode *top = find(item, LexNode::TOP);
+        if (top) {
+            SyntaxNode *type = any(top);
+            if (type->lex_type == LexNode::STRUCT_BLOCK) {
+                SyntaxNode *id = find(type, LexNode::IDENTIFIER);
+                std::string name = id->data;
+                if (types.contains(name)) {
+                    throw "already defined";
+                } else {
+                    StructBlock strct{name};
+                    types[name] = strct;
+                }
+            }
+        }
+    }
 }
 
-#define DOWN(_type) GET(_type,ast)
-
-std::vector<FunctionPrototype> functions;
-std::vector<Constant> constants;
-std::vector<Instruction> instructions;
-void add(Instruction i) {
-    instructions.push_back(i);
-}
-
-std::stack<FunctionScope *> functionStack;
-
-
-Register *translateFactor(SyntaxNode *ast) {
-    if(ast->lex_type == LexNode::NUMBER) {
-
-      //  return makeNumber(2);
+SyntaxNode *any(SyntaxNode *item) {
+    if (item->left) {
+        return item->left;
+    } else if (item->right) {
+        return item->right;
     }
     return nullptr;
 }
-Register translateNumber(SyntaxNode *ast) {
 
-    if(ast->data.find('.') != std::string::npos) {
-
+SyntaxNode *find(SyntaxNode *item, uint8_t type) {
+    if (item->left->lex_type == type) {
+        return item->left;
+    } else if (item->right->lex_type == type) {
+        return item->right;
     }
+    return nullptr;
 }
 
-int64_t findConst(int64_t num) {
-    uint64_t size = constants.size();
-    for (int i = 0; i < size; ++i)  {
-        if (constants[i].type == CONST_INT &&  constants[i].value.as_int == num) {
-            return i;
+enum VarType {
+    FUNCTION,
+    ARRAY,
+    PURE
+};
+
+class Type;
+
+class TypeDef {
+    std::string name;
+    std::vector<Type *> input;
+    Type *output;
+};
+
+class Type {
+    TypeDef *name;
+    bool isArray;
+};
+
+
+class ScopeObject {
+
+};
+
+class Scope {
+public:
+    Scope *parent = nullptr;
+    std::vector<ScopeObject *> object;
+};
+
+class VarDeclaration : ScopeObject {
+public:
+    explicit VarDeclaration(Type *type) : type(type) {
+
+    }
+
+    std::string name;
+    Type *type;
+    bool isInput = false;
+};
+
+class Statement : ScopeObject {
+public:
+    SyntaxNode *ast;
+};
+
+class Branch : ScopeObject {
+public:
+    Scope *sub;
+    SyntaxNode *ast;
+};
+
+TypeDef *findFromAst(SyntaxNode *ast) {
+    for (typeDef t: types) {
+        if (t.name == ast->data) {
+            return t;
         }
     }
-    return -1;
+    throw "error";
 }
 
-Register *makeNumber(int64_t number) {
-    auto *ptr = useNew();
-    int64_t foundConst = findConst(number);
-    if(foundConst == -1) {
-        constants.push_back({CONST_INT,number});
-        foundConst = (int64_t)constants.size()-1;
+Type *typeFromAst(SyntaxNode *ast) {
+    TypeDef def = findFromAst(ast->right);
+    //TODO: make more
+}
+
+
+
+void translateBranch(SyntaxNode *ast,Branch branch) {
+
+}
+void translateFunction(SyntaxNode *ast) {
+    auto *scope = new Scope;
+    scope->parent = nullptr;
+    scope->object.clear();
+    for (SyntaxNode *input: ast.input) {
+        auto *declaration = new VarDeclaration(typeFromAst(input));
+        declaration->isInput = true;
+        scope->object.push_back(declaration);
+
     }
-    add({IRCode::LOAD_CONST,ptr->index});
-    Instruction i = {};
-    i.as_int = (int32_t)foundConst;
-    add(i);
-    return ptr;
-}
+    for (SyntaxNode *instruction: ast.instruction) {
+        if (instruction == Var_Declaration) {
+            auto *declaration = new VarDeclaration(typeFromAst(instruction));
+            decl.name = instruction->data;
 
-Register *makeAdd(Register *a, Register *b) {
-    auto *ptr = useNew();
-    add({IRCode::ADD,a->index , b->index,ptr->index});
-    return ptr;
-}
-
-Register *translateMul(SyntaxNode *ast) {
-    push();
-    auto *left = translateFactor(ast->left);
-    auto *right = translateFactor(ast->right);
-    pop();
-
-    auto *add = makeAdd(left, right);
-    return add;
-}
-
-FunctionScope *makeFunction(std::vector<Var> *variables) {
-    auto *scope = new FunctionScope;
-
-    auto *baseScope = new Snapshot{};
-    baseScope->registers = static_cast<Register *>(malloc(SIZEOF_SCOPE));
-    for (uint64_t i = 0; i < MAX_REGISTERS; ++i) {
-        baseScope->registers[i] = Register{(uint8_t)i};
+            scope->object.push_back(decl);
+        } else if (instruction == Statement) {
+            auto *statement = new Statement;
+            statement->ast = instruction->ast;
+            scope->object.push_back(statement);
+        } else if (instruction == Branch) {
+            auto *branch = new Branch;
+            branch->ast = instruction->ast;
+            branch->sub = new Scope;
+            branch->sub->parent = scope;
+            scope->object.push_back(branch);
+            translateBranch(instruction->ast , branch);
+        }
     }
-
-    uint64_t size = variables->size();
-    for (int i = 0; i < size; ++i) {
-        Var &at = variables->at(i);
-        scope->variables[at] = i;
-        use(&baseScope->registers[i]);
-    }
-    FunctionPrototype proto {};
-    functions.push_back(proto);
-
-    stack.push(baseScope);
-    functionStack.push(scope);
-
-    return scope;
-}
-
-
-void Translator::translate(SyntaxNode *ast) {
-    push();
-
-
-    pop();
-
-
-    closeStack();
 }

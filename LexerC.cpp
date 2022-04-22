@@ -72,6 +72,17 @@ LexerC::LexerC(IterableStream *token_stream) : token_stream(token_stream) {
 
 }
 
+
+std::vector<SyntaxNode *> LexerC::entry() {
+    std::vector<SyntaxNode*> list;
+
+    while (token_stream->hasEntriesLeft())  {
+        list.push_back(topLevel());
+    }
+    return list;
+}
+
+
 SyntaxNode *LexerC::topLevel() {
     BEGIN(TOP);
     MATCH(Syntax::STATIC) {
@@ -85,6 +96,7 @@ SyntaxNode *LexerC::topLevel() {
     }
     END;
 }
+
 
 SyntaxNode *LexerC::staticBlock() {
     BEGIN(STATIC_BLOCK);
@@ -231,7 +243,6 @@ SyntaxNode *LexerC::varAssignment() {
     BEGIN(VAR_ASSIGNMENT);
 
 
-
     END;
 }
 
@@ -298,7 +309,6 @@ SyntaxNode *LexerC::varDefinitionShort() {
 
     END;
 }
-
 
 
 SyntaxNode *LexerC::outDefinitions() {
@@ -511,7 +521,7 @@ SyntaxNode *LexerC::term() {
     while (TYPEOF(Syntax::A_MULTIPLY)) {
         NEXT;
         SyntaxNode *right = factor();
-        left = createBiNode(LexNode::A_MULTIPLY,left, right);
+        left = createBiNode(LexNode::A_MULTIPLY, left, right);
     }
     FINISH(left);
 
@@ -541,16 +551,16 @@ SyntaxNode *LexerC::factor() {
         THEN(factor);
         SyntaxNode *node = createNode(LexNode::B_NOT, factor);
         FINISH(node);
-    }else MATCH(Syntax::NUMBER) {
+    } else MATCH(Syntax::NUMBER) {
         THEN(number);
         FINISH(number);
     } else MATCH(Syntax::FALSE) {
         NEXT;
-        SyntaxNode *node = createLeaf(LexNode::NUMBER,"0");
+        SyntaxNode *node = createLeaf(LexNode::NUMBER, "0");
         FINISH(node);
     } else MATCH(Syntax::TRUE) {
         NEXT;
-        SyntaxNode *node = createLeaf(LexNode::NUMBER,"1");
+        SyntaxNode *node = createLeaf(LexNode::NUMBER, "1");
         FINISH(node);
     } else MATCH(Syntax::BRACKET_OPEN) {
         THEN(arrayInitializer);

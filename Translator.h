@@ -6,12 +6,34 @@
 #define DATA_PROCESSING_INTERMEDIATE_TRANSLATOR_H
 
 #include "LexerC.h"
+#include "DPI_Types.h"
 
-
+using namespace types;
 
 class Translator {
+private:
+    std::vector<Constant> constants;
+    std::vector<Instruction> instructions;
+    std::vector<FunctionPrototype> functions;
+    std::unordered_map<std::string , StructBlock> types;
+    std::vector<SyntaxNode *> ast;
 public:
-    void translate(SyntaxNode *ast);
+    explicit Translator(std::vector<SyntaxNode *> ast): ast(ast) {}
+    void translate();
+    void buildPrototypes();
+
+    void makeNumber(Register *dest , int64_t number);
+
+    void makeAdd(Register *dest , Register *a, Register *b);
+
+    void makeMove(Register *a, Register *b);
+
+    void makeLoadConst(Register *dest , uint64_t index);
+
+    void makeCall(Register *function);
+
+    void *makeEndOfCode();
+
 };
 
 

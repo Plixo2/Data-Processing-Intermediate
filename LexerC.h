@@ -39,6 +39,7 @@ private:
 public:
     LexerC(IterableStream *token_stream);
     SyntaxNode *topLevel();
+    std::vector<SyntaxNode *> entry();
 
     SyntaxNode *staticBlock();
     SyntaxNode *structBlock();

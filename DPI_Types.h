@@ -64,17 +64,10 @@ namespace types {
         }
     } ObjectTable;
 
-    typedef union {
-        int64_t as_int;
-        double as_float;
-        _objTable *as_object;
-        _funcProto *as_function;
-        _prototype *as_obj_prototype;
-    } ConstValue;
 
     typedef struct {
         uint8_t type;
-        ConstValue value;
+        Value value;
     } Constant;
 
     #define CONST_INT 1
@@ -103,7 +96,23 @@ namespace types {
         uint32_t level;
     } Var;
 
+    typedef struct {
+        std::string name;
+        std::string type;
+    } StructVar;
 
+    typedef struct {
+        std::string name;
+        std::vector<std::string> input;
+        StructVar output;
+    } StructFunction;
+
+
+    typedef struct {
+        std::string name;
+        std::vector<StructVar> variables;
+        std::vector<StructFunction> functions;
+    } StructBlock;
 
 
 
