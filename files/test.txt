@@ -3,8 +3,14 @@ static Block {
         int a = 2 * 1
     }
 }
-struct name {
+struct linkForward {
+    strc b
+}
+struct strc {
     list[] l
     int i
     fn a (type, int) -> void
+}
+struct linkBack {
+    strc a
 }

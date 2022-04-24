@@ -102,7 +102,7 @@ int main() {
                         (std::istreambuf_iterator<char>()));
 
     std::string str = content;
-    std::cout << str << std::endl;
+   // std::cout << str << std::endl;
     const char *string = str.c_str();
     std::vector<Token> *stream = tokenizer.generate_stream(string, str.length());
 
@@ -120,12 +120,12 @@ int main() {
     uint64_t index = 0;
     while (iterableStream.hasEntriesLeft()) {
         const Token &current = iterableStream.current();
-        std::cout << index << ":  " << current.type << " | " << current.raw_string << std::endl;
+        //std::cout << index << ":  " << current.type << " | " << current.raw_string << std::endl;
         i += current.type * i;
         iterableStream.consume();
         index++;
     }
-    std::cout << "h: " << i % 10001 << std::endl;
+    //std::cout << "h: " << i % 10001 << std::endl;
 
     iterableStream.reset();
 
@@ -142,8 +142,8 @@ int main() {
         delete item;
     }
 
-    // Translator translator;
-    //translator.translate(top);
+    Translator translator(vector);
+    translator.translate();
 
 
     delete stream;

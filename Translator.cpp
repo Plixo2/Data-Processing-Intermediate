@@ -5,12 +5,14 @@
 #include <stack>
 #include <string>
 #include <set>
+#include <iostream>
+#include <utility>
 #include "Translator.h"
 #include "DPI_Types.h"
 
 using namespace types;
 
-/*
+
 class TranslatorAssertionException : public std::exception {
     const char *text;
 
@@ -23,6 +25,8 @@ public:
 
     explicit TranslatorAssertionException(const char *text) : text(text) {}
 };
+
+/*
 
 
 
@@ -85,23 +89,63 @@ SyntaxNode *find(SyntaxNode *item, uint8_t type);
 
 SyntaxNode *any(SyntaxNode *item);
 
+void buildFlatVector(std::vector<SyntaxNode *> &collection, SyntaxNode *current, uint8_t list, uint8_t node) {
+    auto *next = find(current, list);
+    auto *leaf = find(current, node);
+    if (leaf) {
+        collection.push_back(leaf);
+    }
+    if (next) {
+        buildFlatVector(collection, next, list, node);
+    }
+}
+
+void buildStruct(StructBlock *block, SyntaxNode *node) {
+    auto *list = find(node, LexNode::DEFINITIONS_LIST);
+    if (list) {
+        std::vector<SyntaxNode *> collection;
+        buildFlatVector(collection, list, LexNode::DEFINITIONS_LIST, LexNode::DEFINITION);
+        for (SyntaxNode *item : collection) {
+            std::cout << item->lex_type << std::endl;
+        }
+    }
+}
+
 void Translator::buildPrototypes() {
+    std::vector<std::pair<StructBlock, SyntaxNode *>> structs;
     for (SyntaxNode *item: ast) {
-        SyntaxNode *top = find(item, LexNode::TOP);
-        if (top) {
-            SyntaxNode *type = any(top);
-            if (type->lex_type == LexNode::STRUCT_BLOCK) {
-                SyntaxNode *id = find(type, LexNode::IDENTIFIER);
-                std::string name = id->data;
-                if (types.contains(name)) {
-                    throw "already defined";
-                } else {
-                    StructBlock strct{name};
-                    types[name] = strct;
-                }
+        SyntaxNode *type = any(item);
+        if (type->lex_type == LexNode::STRUCT_BLOCK) {
+            SyntaxNode *id = find(type, LexNode::IDENTIFIER);
+            std::string name = id->data;
+            if (types.contains(name)) {
+                std::string msg = name + " was already defined";
+                throw TranslatorAssertionException(&msg);
+            } else {
+                StructBlock structBlock{name};
+                types[name] = structBlock;
+                structs.push_back({structBlock, type});
+                /*for(std::pair<std::string, StructBlock> s : types) {
+
+                }*/
             }
         }
     }
+    std::cout << structs.size() << std::endl;
+    for (auto &item: structs) {
+        std::cout << "Struct name: " << item.first.name << std::endl;
+        buildStruct(&item.first, item.second);
+    }
+
+}
+
+void Translator::translate() {
+    buildPrototypes();
+
+}
+
+Translator::Translator(std::vector<SyntaxNode *> ast) {
+    this->ast = std::move(ast);
 }
 
 SyntaxNode *any(SyntaxNode *item) {
@@ -110,18 +154,28 @@ SyntaxNode *any(SyntaxNode *item) {
     } else if (item->right) {
         return item->right;
     }
+    /*
+    std::string msg = "could not any ";
+    throw TranslatorAssertionException(&msg);
+    */
     return nullptr;
 }
 
 SyntaxNode *find(SyntaxNode *item, uint8_t type) {
-    if (item->left->lex_type == type) {
+    if (item->left && item->left->lex_type == type) {
         return item->left;
-    } else if (item->right->lex_type == type) {
+    } else if (item->right && item->right->lex_type == type) {
         return item->right;
     }
+    /*
+    std::string msg = "could not find ";
+    msg += LexNode::NAMES[type];
+    throw TranslatorAssertionException(&msg);
+    */
     return nullptr;
 }
 
+/*
 enum VarType {
     FUNCTION,
     ARRAY,
@@ -223,3 +277,4 @@ void translateFunction(SyntaxNode *ast) {
         }
     }
 }
+*/

@@ -18,7 +18,7 @@ private:
     std::unordered_map<std::string , StructBlock> types;
     std::vector<SyntaxNode *> ast;
 public:
-    explicit Translator(std::vector<SyntaxNode *> ast): ast(ast) {}
+    Translator(std::vector<SyntaxNode *> ast);
     void translate();
     void buildPrototypes();
 

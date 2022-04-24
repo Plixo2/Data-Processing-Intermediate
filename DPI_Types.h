@@ -11,9 +11,6 @@
 #include "DPI_Syntax.h"
 
 
-
-
-
 namespace types {
     struct _objTable;
     struct _funcProto;
@@ -70,11 +67,11 @@ namespace types {
         Value value;
     } Constant;
 
-    #define CONST_INT 1
-    #define CONST_FLOAT 2
-    #define CONST_OBJECT 3
-    #define CONST_FUNCTION 4
-    #define CONST_OBJECT_PROTO 5
+#define CONST_INT 1
+#define CONST_FLOAT 2
+#define CONST_OBJECT 3
+#define CONST_FUNCTION 4
+#define CONST_OBJECT_PROTO 5
 
 
     typedef struct {
@@ -90,30 +87,31 @@ namespace types {
         }
     } Snapshot;
 
-    typedef struct _var{
+    typedef struct _var {
         std::string name;
         std::string type;
         uint32_t level;
     } Var;
 
+    struct _structBlock;
+
     typedef struct {
         std::string name;
-        std::string type;
+        _structBlock *type;
     } StructVar;
 
     typedef struct {
         std::string name;
-        std::vector<std::string> input;
-        StructVar output;
+        std::vector<_structBlock *> input;
+        _structBlock *output;
     } StructFunction;
 
 
-    typedef struct {
+    typedef struct _structBlock {
         std::string name;
         std::vector<StructVar> variables;
         std::vector<StructFunction> functions;
     } StructBlock;
-
 
 
 }
