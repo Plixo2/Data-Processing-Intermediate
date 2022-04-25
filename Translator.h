@@ -15,12 +15,13 @@ private:
     std::vector<Constant> constants;
     std::vector<Instruction> instructions;
     std::vector<FunctionPrototype> functions;
-    std::unordered_map<std::string , StructBlock> types;
+    std::unordered_map<std::string , StructBlock*> types;
     std::vector<SyntaxNode *> ast;
 public:
     Translator(std::vector<SyntaxNode *> ast);
     void translate();
     void buildPrototypes();
+    void buildStruct(StructBlock *block, SyntaxNode *node);
 
     void makeNumber(Register *dest , int64_t number);
 

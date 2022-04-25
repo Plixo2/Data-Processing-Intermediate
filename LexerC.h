@@ -18,6 +18,7 @@ class AssertionException : public std::exception {
 
 public:
     explicit AssertionException(std::string *text) : text(text->c_str()) {}
+
     explicit AssertionException(const char *text) : text(text) {}
 };
 
@@ -26,6 +27,10 @@ struct SyntaxNode {
     std::string data;
     SyntaxNode *left;
     SyntaxNode *right;
+    SyntaxNode *find(uint8_t type);
+    SyntaxNode *assert(uint8_t type);
+    SyntaxNode *assert();
+    SyntaxNode *any();
 
     ~SyntaxNode() {
         delete left;
@@ -38,64 +43,88 @@ private:
     IterableStream *token_stream;
 public:
     LexerC(IterableStream *token_stream);
+
     SyntaxNode *topLevel();
+
     std::vector<SyntaxNode *> entry();
 
     SyntaxNode *staticBlock();
+
     SyntaxNode *structBlock();
 
     SyntaxNode *statement();
+
     SyntaxNode *blockStatement();
+
     SyntaxNode *blockStatementList();
 
     SyntaxNode *flowStatement();
+
     SyntaxNode *normalStatement();
 
     SyntaxNode *definitions();
+
     SyntaxNode *definitionsList();
 
     SyntaxNode *varDefinition();
+
     SyntaxNode *varDefinitionShort();
+
     SyntaxNode *varAssignment();
+
     SyntaxNode *varCall();
 
     SyntaxNode *outDefinitions();
+
     SyntaxNode *inputDefinitions();
+
     SyntaxNode *inputDefs();
+
     SyntaxNode *inputDefinitionsShort();
+
     SyntaxNode *inputDefsShort();
 
     SyntaxNode *functionDefShort();
+
     SyntaxNode *functionDef();
+
     SyntaxNode *typeDef();
+
     SyntaxNode *idDef();
+
     SyntaxNode *number();
 
     SyntaxNode *argList();
+
     SyntaxNode *member();
+
     SyntaxNode *varTerminal();
+
     SyntaxNode *arrayInitializer();
 
     SyntaxNode *staticList();
+
     SyntaxNode *staticFunction();
 
     SyntaxNode *_if();
-    SyntaxNode *_for();
 
+    SyntaxNode *_for();
 
 
     SyntaxNode *expression();
 
     SyntaxNode *boolArithmetic();
+
     SyntaxNode *comparisonArithmetic();
+
     SyntaxNode *arithmetic();
+
     SyntaxNode *term();
+
     SyntaxNode *factor();
 
 
-
 };
-
 
 
 #endif //DATA_PROCESSING_INTERMEDIATE_LEXERC_H

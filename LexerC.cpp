@@ -74,9 +74,9 @@ LexerC::LexerC(IterableStream *token_stream) : token_stream(token_stream) {
 
 
 std::vector<SyntaxNode *> LexerC::entry() {
-    std::vector<SyntaxNode*> list;
+    std::vector<SyntaxNode *> list;
 
-    while (token_stream->hasEntriesLeft())  {
+    while (token_stream->hasEntriesLeft()) {
         list.push_back(topLevel());
     }
     return list;
@@ -276,7 +276,9 @@ SyntaxNode *LexerC::_for() {
 
 SyntaxNode *LexerC::definitionsList() {
     BEGIN(DEFINITIONS_LIST);
-
+    MATCH(Syntax::BRACES_CLOSED) {
+        FINISH(empty(LexNode::DEFINITIONS_LIST));
+    }
     THEN(definitions);
     MATCH(Syntax::BRACES_CLOSED) {
         FINISH(definitions);
@@ -617,3 +619,40 @@ SyntaxNode *LexerC::functionDefShort() {
 }
 
 
+SyntaxNode *SyntaxNode::find(uint8_t type) {
+    if (left && left->lex_type == type) {
+        return left;
+    } else if (right && right->lex_type == type) {
+        return right;
+    }
+    return nullptr;
+}
+
+SyntaxNode *SyntaxNode::assert(uint8_t type) {
+    if (left && left->lex_type == type) {
+        return left;
+    } else if (right && right->lex_type == type) {
+        return right;
+    }
+    std::string excptstr = "cant find " + LexNode::NAMES[type];
+    throw AssertionException(&excptstr);
+}
+
+SyntaxNode *SyntaxNode::any() {
+    if (left) {
+        return left;
+    } else if (right) {
+        return right;
+    }
+    return nullptr;
+}
+
+SyntaxNode *SyntaxNode::assert() {
+    if (left) {
+        return left;
+    } else if (right) {
+        return right;
+    }
+    std::string excptstr = "cant resolve any type";
+    throw AssertionException(&excptstr);
+}

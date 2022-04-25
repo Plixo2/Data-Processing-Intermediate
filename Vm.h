@@ -168,7 +168,7 @@ namespace Interpreter {
                 activation_record_pointer += active_record_size;
                 Push(active_record_size);
                 FunctionPrototype *proto = Register(i.code.A).value.as_function;
-                active_record_size = proto->activation_records;
+                active_record_size = proto->registers;
                 pc = proto->instruction_location;
                 break;
             }

@@ -85,13 +85,9 @@ void closeStack() {
 */
 
 
-SyntaxNode *find(SyntaxNode *item, uint8_t type);
-
-SyntaxNode *any(SyntaxNode *item);
-
 void buildFlatVector(std::vector<SyntaxNode *> &collection, SyntaxNode *current, uint8_t list, uint8_t node) {
-    auto *next = find(current, list);
-    auto *leaf = find(current, node);
+    auto *next = current->find(list);
+    auto *leaf = current->find(node);
     if (leaf) {
         collection.push_back(leaf);
     }
@@ -100,80 +96,89 @@ void buildFlatVector(std::vector<SyntaxNode *> &collection, SyntaxNode *current,
     }
 }
 
-void buildStruct(StructBlock *block, SyntaxNode *node) {
-    auto *list = find(node, LexNode::DEFINITIONS_LIST);
+#define ASSERT_NODE(_type) if(!(_type)) {std::string msg = "a note could not be found"; throw TranslatorAssertionException(&msg); }
+
+void Translator::buildStruct(StructBlock *block, SyntaxNode *node) {
+    auto *list = node->find(LexNode::DEFINITIONS_LIST);
     if (list) {
         std::vector<SyntaxNode *> collection;
         buildFlatVector(collection, list, LexNode::DEFINITIONS_LIST, LexNode::DEFINITION);
-        for (SyntaxNode *item : collection) {
-            std::cout << item->lex_type << std::endl;
+        for (SyntaxNode *item: collection) {
+            auto *def = item->assert();
+            if (def->lex_type == LexNode::VAR_DEFINITION_SHORT) {
+                auto *typeAndID = def->assert();
+                auto *type = typeAndID->assert(LexNode::TYPE);
+                auto *type_id = type->assert(LexNode::TYPE_IDENTIFIER);
+                auto *type_obj = type->assert(LexNode::TYPE_TYPE);
+                auto *name = typeAndID->assert(LexNode::IDENTIFIER);
+
+                StructBlock *typeObj = types[type_id->data];
+                if (!typeObj) {
+                    std::string exp = "cant find type " + type_id->data;
+                    throw TranslatorAssertionException(&exp);
+                }
+                bool type_of_obj;
+                if (type_obj->data == "object") {
+                    type_of_obj = false;
+                } else if (type_obj->data == "array") {
+                    type_of_obj = true;
+                } else {
+                    std::string exp = "cant resolve its an array or not " + type_id->data;
+                    throw TranslatorAssertionException(&exp);
+                }
+                StructVar var = {name->data, type_of_obj, typeObj};
+                block->variables.push_back(var);
+            }
         }
     }
 }
 
 void Translator::buildPrototypes() {
-    std::vector<std::pair<StructBlock, SyntaxNode *>> structs;
+    std::vector<std::pair<StructBlock *, SyntaxNode *>> structs;
     for (SyntaxNode *item: ast) {
-        SyntaxNode *type = any(item);
+        SyntaxNode *type = item->any();
+        ASSERT_NODE(type);
         if (type->lex_type == LexNode::STRUCT_BLOCK) {
-            SyntaxNode *id = find(type, LexNode::IDENTIFIER);
+            SyntaxNode *id = type->find(LexNode::IDENTIFIER);
+            ASSERT_NODE(id);
             std::string name = id->data;
             if (types.contains(name)) {
                 std::string msg = name + " was already defined";
                 throw TranslatorAssertionException(&msg);
             } else {
-                StructBlock structBlock{name};
+                auto *structBlock = new StructBlock{name};
                 types[name] = structBlock;
-                structs.push_back({structBlock, type});
+                structs.emplace_back(structBlock, type);
                 /*for(std::pair<std::string, StructBlock> s : types) {
 
                 }*/
             }
+
         }
     }
     std::cout << structs.size() << std::endl;
     for (auto &item: structs) {
-        std::cout << "Struct name: " << item.first.name << std::endl;
-        buildStruct(&item.first, item.second);
+        std::cout << "Struct name: " << item.first->name << std::endl;
+        buildStruct(item.first, item.second);
     }
 
 }
 
-void Translator::translate() {
-    buildPrototypes();
 
+
+void Translator::translate() {
+    auto *buildInInt = new StructBlock{"int"};
+    types["int"] = buildInInt;
+    auto *BuildInDouble = new StructBlock{"decimal"};
+    types["decimal"] = BuildInDouble;
+    buildPrototypes();
 }
 
 Translator::Translator(std::vector<SyntaxNode *> ast) {
     this->ast = std::move(ast);
 }
 
-SyntaxNode *any(SyntaxNode *item) {
-    if (item->left) {
-        return item->left;
-    } else if (item->right) {
-        return item->right;
-    }
-    /*
-    std::string msg = "could not any ";
-    throw TranslatorAssertionException(&msg);
-    */
-    return nullptr;
-}
 
-SyntaxNode *find(SyntaxNode *item, uint8_t type) {
-    if (item->left && item->left->lex_type == type) {
-        return item->left;
-    } else if (item->right && item->right->lex_type == type) {
-        return item->right;
-    }
-    /*
-    std::string msg = "could not find ";
-    msg += LexNode::NAMES[type];
-    throw TranslatorAssertionException(&msg);
-    */
-    return nullptr;
-}
 
 /*
 enum VarType {

@@ -42,7 +42,7 @@ namespace types {
     } Instruction;
 
     typedef struct _funcProto {
-        uint8_t activation_records;
+        uint8_t registers;
         uint32_t instruction_location;
     } FunctionPrototype;
 
@@ -97,13 +97,19 @@ namespace types {
 
     typedef struct {
         std::string name;
+        bool isArray;
         _structBlock *type;
     } StructVar;
 
     typedef struct {
+        bool isArray;
+        _structBlock *type;
+    } StructIOVar;
+
+    typedef struct {
         std::string name;
-        std::vector<_structBlock *> input;
-        _structBlock *output;
+        std::vector<StructIOVar *> input;
+        StructIOVar *output;
     } StructFunction;
 
 

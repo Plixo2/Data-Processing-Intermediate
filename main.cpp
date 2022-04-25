@@ -139,12 +139,14 @@ int main() {
     const std::vector<SyntaxNode *> &vector = lexer.entry();
     for (SyntaxNode *item: vector) {
         printBT2("", item, false);
-        delete item;
     }
 
     Translator translator(vector);
     translator.translate();
 
+    for (SyntaxNode *item: vector) {
+        delete item;
+    }
 
     delete stream;
 

@@ -7,8 +7,9 @@ struct linkForward {
     strc b
 }
 struct strc {
-    list[] l
+    linkForward[] l
     int i
+    decimal d
     fn a (type, int) -> void
 }
 struct linkBack {
