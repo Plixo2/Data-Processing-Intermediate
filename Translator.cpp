@@ -107,30 +107,38 @@ void Translator::buildStruct(StructBlock *block, SyntaxNode *node) {
             auto *def = item->assert();
             if (def->lex_type == LexNode::VAR_DEFINITION_SHORT) {
                 auto *typeAndID = def->assert();
-                auto *type = typeAndID->assert(LexNode::TYPE);
-                auto *type_id = type->assert(LexNode::TYPE_IDENTIFIER);
-                auto *type_obj = type->assert(LexNode::TYPE_TYPE);
+                const std::pair<StructBlock *, bool> &pair = getStructVar(typeAndID->assert(LexNode::TYPE));
                 auto *name = typeAndID->assert(LexNode::IDENTIFIER);
 
-                StructBlock *typeObj = types[type_id->data];
-                if (!typeObj) {
-                    std::string exp = "cant find type " + type_id->data;
-                    throw TranslatorAssertionException(&exp);
-                }
-                bool type_of_obj;
-                if (type_obj->data == "object") {
-                    type_of_obj = false;
-                } else if (type_obj->data == "array") {
-                    type_of_obj = true;
-                } else {
-                    std::string exp = "cant resolve its an array or not " + type_id->data;
-                    throw TranslatorAssertionException(&exp);
-                }
-                StructVar var = {name->data, type_of_obj, typeObj};
+                StructVar var = {name->data, pair.second, pair.first};
                 block->variables.push_back(var);
+            } else if (def->lex_type == LexNode::FUNCTION_DECLARATION) {
+                StructFunction func = getFunctionDeclaration(def);
+                block->functions.push_back(func);
             }
         }
     }
+}
+
+std::pair<StructBlock *, bool> Translator::getStructVar(SyntaxNode *type) {
+
+    auto *type_id = type->assert(LexNode::TYPE_IDENTIFIER);
+    auto *type_obj = type->assert(LexNode::TYPE_TYPE);
+    StructBlock *typeObj = types[type_id->data];
+    if (!typeObj) {
+        std::string exp = "cant find type " + type_id->data;
+        throw TranslatorAssertionException(&exp);
+    }
+    bool type_of_obj;
+    if (type_obj->data == "object") {
+        type_of_obj = false;
+    } else if (type_obj->data == "array") {
+        type_of_obj = true;
+    } else {
+        std::string exp = "cant resolve its an array or not " + type_id->data;
+        throw TranslatorAssertionException(&exp);
+    }
+    return {typeObj, type_of_obj};
 }
 
 void Translator::buildPrototypes() {
@@ -154,29 +162,105 @@ void Translator::buildPrototypes() {
                 }*/
             }
 
+        } else  if (type->lex_type == LexNode::STATIC_BLOCK) {
+            auto *name = type->assert(LexNode::IDENTIFIER);
+            std::string block_name = name->data;
+            std::vector<SyntaxNode *> funcs;
+            buildFlatVector(funcs, type, LexNode::STATIC_LIST, LexNode::STATIC_FUNCTION);
+            auto *block = new StaticBlock{block_name};
+            namespaces[block_name] = block;
+            for (const auto &function : funcs) {
+                auto *func_declaration = function->assert(LexNode::FUNCTION_DECLARATION);
+                StaticFunction func = getFunctionDeclaration2(func_declaration);
+                block->functions.push_back(func);
+                std::cout << func_declaration->assert(LexNode::IDENTIFIER)->data << std::endl;
+                std::cout << func.name << std::endl;
+                std::cout << func.output.type->name << std::endl;
+            }
+
+
         }
     }
     std::cout << structs.size() << std::endl;
     for (auto &item: structs) {
-        std::cout << "Struct name: " << item.first->name << std::endl;
+        std::cout << "Struct: " << item.first->name << std::endl;
         buildStruct(item.first, item.second);
     }
 
 }
 
 
-
 void Translator::translate() {
     auto *buildInInt = new StructBlock{"int"};
     types["int"] = buildInInt;
-    auto *BuildInDouble = new StructBlock{"decimal"};
-    types["decimal"] = BuildInDouble;
+    auto *buildInDouble = new StructBlock{"decimal"};
+    types["decimal"] = buildInDouble;
+    auto *buildVoid = new StructBlock{"void"};
+    types["void"] = buildVoid;
     buildPrototypes();
+    buildStatic();
+}
+
+void Translator::buildStatic() {
+    for (SyntaxNode *item: ast) {
+        SyntaxNode *type = item->any();
+        ASSERT_NODE(type);
+        if (type->lex_type == LexNode::STATIC_BLOCK) {
+            auto *name = type->assert(LexNode::IDENTIFIER);
+            std::string block_name = name->data;
+
+        }
+
+    }
 }
 
 Translator::Translator(std::vector<SyntaxNode *> ast) {
     this->ast = std::move(ast);
 }
+
+StructFunction Translator::getFunctionDeclaration(SyntaxNode *def) {
+    auto *name = def->assert(LexNode::IDENTIFIER);
+    auto *io = def->assert(LexNode::INPUT_AND_OUTPUT);
+    auto *out = io->assert(LexNode::OUTPUT_DEFINITION);
+    auto *inputList = io->assert(LexNode::INPUT_DEFINITIONS);
+    StructFunction func = {name->data};
+    if (inputList) {
+        std::vector<SyntaxNode *> inputType;
+        buildFlatVector(inputType, inputList, LexNode::INPUT_LIST, LexNode::TYPE_AND_ID);
+        for (const auto &type_and_id: inputType) {
+            const std::pair<StructBlock *, bool> &pair = getStructVar(type_and_id->assert(LexNode::TYPE));
+            const StructIOVar ioVar = {pair.second, pair.first};
+            func.input.push_back(ioVar);
+        }
+    }
+    const std::pair<StructBlock *, bool> &pair = getStructVar(out->assert(LexNode::TYPE));
+    StructIOVar outVar = {pair.second, pair.first};
+    func.output = outVar;
+    return func;
+}
+StaticFunction Translator::getFunctionDeclaration2(SyntaxNode *def) {
+    auto *name = def->assert(LexNode::IDENTIFIER);
+    auto *io = def->assert(LexNode::INPUT_AND_OUTPUT);
+    auto *out = io->assert(LexNode::OUTPUT_DEFINITION);
+    auto *inputList = io->assert(LexNode::INPUT_DEFINITIONS);
+    StaticFunction func = {name->data};
+    if (inputList) {
+        std::vector<SyntaxNode *> inputType;
+        buildFlatVector(inputType, inputList, LexNode::INPUT_LIST, LexNode::TYPE_AND_ID);
+        for (const auto &type_and_id: inputType) {
+            const std::pair<StructBlock *, bool> &pair = getStructVar(type_and_id->assert(LexNode::TYPE));
+            const StructVar ioVar = {type_and_id->assert(LexNode::IDENTIFIER)->data,pair.second, pair.first};
+            func.input.push_back(ioVar);
+        }
+    }
+    const std::pair<StructBlock *, bool> &pair = getStructVar(out->assert(LexNode::TYPE));
+    StructIOVar outVar = {pair.second, pair.first};
+    func.output = outVar;
+    return func;
+}
+
+
+
 
 
 

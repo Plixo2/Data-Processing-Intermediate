@@ -1,8 +1,3 @@
-static Block {
-    fn a () -> void {
-        int a = 2 * 1
-    }
-}
 struct linkForward {
     strc b
 }
@@ -10,8 +5,17 @@ struct strc {
     linkForward[] l
     int i
     decimal d
-    fn a (type, int) -> void
+    fn a(decimal, int) -> void
 }
 struct linkBack {
     strc a
+}
+
+static Block {
+    fn a(int a, strc b) -> void {
+
+    }
+    fn abcdef(int a, decimal b) -> int {
+
+    }
 }

@@ -108,8 +108,8 @@ namespace types {
 
     typedef struct {
         std::string name;
-        std::vector<StructIOVar *> input;
-        StructIOVar *output;
+        std::vector<StructIOVar> input;
+        StructIOVar output;
     } StructFunction;
 
 
@@ -119,6 +119,16 @@ namespace types {
         std::vector<StructFunction> functions;
     } StructBlock;
 
+    typedef struct {
+        std::string name;
+        std::vector<StructVar> input;
+        StructIOVar output;
+    } StaticFunction;
+
+    typedef struct {
+        std::string name;
+        std::vector<StaticFunction> functions;
+    } StaticBlock;
 
 }
 namespace std {

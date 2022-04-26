@@ -15,21 +15,32 @@ private:
     std::vector<Constant> constants;
     std::vector<Instruction> instructions;
     std::vector<FunctionPrototype> functions;
-    std::unordered_map<std::string , StructBlock*> types;
+    std::unordered_map<std::string, StructBlock *> types;
+    std::unordered_map<std::string, StaticBlock *> namespaces;
     std::vector<SyntaxNode *> ast;
 public:
-    Translator(std::vector<SyntaxNode *> ast);
+    explicit Translator(std::vector<SyntaxNode *> ast);
+
     void translate();
+
     void buildPrototypes();
+
     void buildStruct(StructBlock *block, SyntaxNode *node);
 
-    void makeNumber(Register *dest , int64_t number);
+    void buildStatic();
 
-    void makeAdd(Register *dest , Register *a, Register *b);
+    StructFunction getFunctionDeclaration(SyntaxNode *node);
+    StaticFunction getFunctionDeclaration2(SyntaxNode *node);
+
+    std::pair<StructBlock *, bool> getStructVar(SyntaxNode *type);
+
+    void makeNumber(Register *dest, int64_t number);
+
+    void makeAdd(Register *dest, Register *a, Register *b);
 
     void makeMove(Register *a, Register *b);
 
-    void makeLoadConst(Register *dest , uint64_t index);
+    void makeLoadConst(Register *dest, uint64_t index);
 
     void makeCall(Register *function);
 

@@ -91,18 +91,13 @@ int main() {
     caps.push_back(Syntax::END_OF_STATEMENT);
 
     Tokenizer tokenizer(caps);
-//    plus , minus , div , mul , pow , mod
-//    greater equals, greater, smaller , smaller equals, equals , not equals . approx equals
-//    and / or
-//    parentheses
 
 
     std::ifstream ifs("../files/test.txt");
     std::string content((std::istreambuf_iterator<char>(ifs)),
                         (std::istreambuf_iterator<char>()));
 
-    std::string str = content;
-   // std::cout << str << std::endl;
+    const std::string& str = content;
     const char *string = str.c_str();
     std::vector<Token> *stream = tokenizer.generate_stream(string, str.length());
 
@@ -112,28 +107,18 @@ int main() {
                token.type == Syntax::EOL.type;
     }), filtered.end());
 
-//    std::cout << filtered.size() << std::endl;
-//    std::cout << stream->size() << std::endl;
 
     IterableStream iterableStream(&filtered);
     uint64_t i = 3;
     uint64_t index = 0;
     while (iterableStream.hasEntriesLeft()) {
         const Token &current = iterableStream.current();
-        //std::cout << index << ":  " << current.type << " | " << current.raw_string << std::endl;
         i += current.type * i;
         iterableStream.consume();
         index++;
     }
-    //std::cout << "h: " << i % 10001 << std::endl;
 
     iterableStream.reset();
-
-    /*Lexer::Lexer lexer(&iterableStream);
-    Lexer::Node *pNode = lexer.topLevelNode();
-    printBT("", pNode, false);
-    delete pNode;
-    delete stream;*/
 
     LexerC lexer(&iterableStream);
     const std::vector<SyntaxNode *> &vector = lexer.entry();
