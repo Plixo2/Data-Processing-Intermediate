@@ -101,6 +101,7 @@ namespace LexNode {
     extern const uint8_t TERM;
     extern const uint8_t FACTOR;
     extern const uint8_t MEMBER;
+    extern const uint8_t MEMBER_START;
     extern const uint8_t VAR_TERMINAL;
     extern const uint8_t ARRAY_INIT;
     extern const uint8_t EMPTY_STATEMENT;
@@ -135,6 +136,9 @@ namespace LexNode {
     extern const uint8_t VAR_ACTION;
     extern const uint8_t VAR_ASSIGNMENT;
     extern const uint8_t VAR_CALL;
+    extern const uint8_t ARRAY_ACCESS;
+    extern const uint8_t MEMBER_ACCESS;
+    extern const uint8_t FUNCTION_ACCESS;
 
     extern const std::vector<std::string> NAMES;
 }

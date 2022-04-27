@@ -98,6 +98,8 @@ public:
 
     SyntaxNode *member();
 
+    SyntaxNode *memberStart();
+
     SyntaxNode *varTerminal();
 
     SyntaxNode *arrayInitializer();

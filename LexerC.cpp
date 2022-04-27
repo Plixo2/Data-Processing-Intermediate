@@ -214,28 +214,25 @@ SyntaxNode *LexerC::normalStatement() {
     BEGIN(SINGLE_STATEMENT);
 
     THEN(idDef);
-   /* MATCH(Syntax::ASSIGN) {
-        NEXT;
-        THEN(expression);
-        SyntaxNode *node = createBiNode(LexNode::VAR_ASSIGNMENT, member, expression);
-        FINISH(node);
-    } */
     MATCH(Syntax::KEYWORD) {
-        SyntaxNode *typeAndID = createBiNode(LexNode::TYPE_AND_ID, idDef, createNode(LexNode::MEMBER,this->idDef()));
+        SyntaxNode *type = this->typeDef();
+        SyntaxNode *typeAndID = createBiNode(LexNode::TYPE_AND_ID, idDef, type);
         ASSERT(Syntax::ASSIGN);
         THEN(expression);
         SyntaxNode *create = createBiNode(LexNode::VAR_DEFINITION, typeAndID, expression);
         FINISH(create);
-    } else MATCH(Syntax::DOT) {
-        NEXT;
-
-    }
-    /* else MATCH(Syntax::B_NOT)  {
-        NEXT;
-        SyntaxNode *action = createNode(LexNode::VAR_ACTION, member);
+    } else {
+        THEN(member);
+        SyntaxNode *memberStart = createBiNode(LexNode::MEMBER_START, idDef, member);
+        MATCH(Syntax::ASSIGN) {
+            NEXT;
+            THEN(expression);
+            SyntaxNode *node = createBiNode(LexNode::VAR_ASSIGNMENT, memberStart, expression);
+            FINISH(node);
+        }
+        SyntaxNode *action = createNode(LexNode::VAR_ACTION, memberStart);
         FINISH(action);
-    }*/
-
+    }
     END;
 }
 
@@ -434,12 +431,26 @@ SyntaxNode *LexerC::argList() {
     END;
 }
 
+SyntaxNode *LexerC::memberStart() {
+    BEGIN(MEMBER_START);
+
+
+    THEN(idDef);
+    if (TYPEOF(Syntax::DOT) || TYPEOF(Syntax::PARENTHESES_OPEN) || TYPEOF(Syntax::BRACKET_OPEN)) {
+        THEN(member);
+        FINISH_BI(idDef, member);
+    } else {
+        FINISH(idDef);
+    }
+
+    END;
+}
+
 SyntaxNode *LexerC::member() {
     BEGIN(MEMBER);
 
     THEN(varTerminal);
-    MATCH(Syntax::DOT) {
-        NEXT;
+    if (TYPEOF(Syntax::DOT) || TYPEOF(Syntax::PARENTHESES_OPEN) || TYPEOF(Syntax::BRACKET_OPEN)) {
         THEN(member);
         FINISH_BI(varTerminal, member);
     }
@@ -449,20 +460,25 @@ SyntaxNode *LexerC::member() {
 
 SyntaxNode *LexerC::varTerminal() {
     BEGIN(VAR_TERMINAL);
-
-    THEN(idDef);
-    MATCH(Syntax::PARENTHESES_OPEN) {
+    MATCH(Syntax::DOT) {
+        NEXT;
+        THEN(idDef);
+        FINISH(createNode(LexNode::MEMBER_ACCESS, idDef));
+    } else MATCH(Syntax::PARENTHESES_OPEN) {
         NEXT;
         THEN(argList);
         ASSERT(Syntax::PARENTHESES_CLOSED);
-        FINISH_BI(idDef, argList);
+        FINISH(createNode(LexNode::FUNCTION_ACCESS, argList));
     } else MATCH(Syntax::BRACKET_OPEN) {
         NEXT;
         THEN(expression);
         ASSERT(Syntax::BRACKET_CLOSED);
-        FINISH_BI(idDef, expression);
+        FINISH(createNode(LexNode::ARRAY_ACCESS, expression));
+    } else {
+        SyntaxNode *_returnValue = empty(blockStack.top());
+        blockStack.pop();
+        return _returnValue;
     }
-    FINISH(idDef);
 
     END;
 }
@@ -582,8 +598,8 @@ SyntaxNode *LexerC::factor() {
         THEN(arrayInitializer);
         FINISH(arrayInitializer);
     } else MATCH(Syntax::KEYWORD) {
-        THEN(member);
-        FINISH(member);
+        THEN(memberStart);
+        FINISH(memberStart);
     }
 
     END;

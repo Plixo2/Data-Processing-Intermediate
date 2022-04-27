@@ -313,123 +313,21 @@ Assignment Translator::buildAssignment(SyntaxNode *ast) {
 }
 
 Declaration Translator::buildDeclaration(SyntaxNode *ast) {
+    std::cout << "decl" << std::endl;
     SyntaxNode *typeAndID = ast->assert(LexNode::TYPE_AND_ID);
-    SyntaxNode *type = typeAndID->assert(LexNode::MEMBER);
-    SyntaxNode *name = typeAndID->assert(LexNode::IDENTIFIER);
+    SyntaxNode *name = typeAndID->assert(LexNode::MEMBER_START)->assert(LexNode::IDENTIFIER);
+    SyntaxNode *type = typeAndID->assert(LexNode::IDENTIFIER);
     SyntaxNode *expression = ast->assert(LexNode::EXPRESSION);
     StructVar typeAndName;
 
-    //types[]
-    //typeAndName.type = types
+    StructBlock *typeOf = types[type->data];
+    if(typeOf == nullptr) {
+        std::string msg = "" + type->data;
+        throw TranslatorAssertionException(&msg);
+    }
+    typeAndName.type = typeOf;
     typeAndName.name = name->data;
+    typeAndName.isArray = false;
 //    typeAndName.
     return {typeAndName,expression};
 }
-
-
-
-
-
-/*
-enum VarType {
-    FUNCTION,
-    ARRAY,
-    PURE
-};
-
-class Type;
-
-class TypeDef {
-    std::string name;
-    std::vector<Type *> input;
-    Type *output;
-};
-
-class Type {
-    TypeDef *name;
-    bool isArray;
-};
-
-
-class ScopeObject {
-
-};
-
-class Scope {
-public:
-    Scope *parent = nullptr;
-    std::vector<ScopeObject *> object;
-};
-
-class VarDeclaration : ScopeObject {
-public:
-    explicit VarDeclaration(Type *type) : type(type) {
-
-    }
-
-    std::string name;
-    Type *type;
-    bool isInput = false;
-};
-
-class Statement : ScopeObject {
-public:
-    SyntaxNode *ast;
-};
-
-class Branch : ScopeObject {
-public:
-    Scope *sub;
-    SyntaxNode *ast;
-};
-
-TypeDef *findFromAst(SyntaxNode *ast) {
-    for (typeDef t: types) {
-        if (t.name == ast->data) {
-            return t;
-        }
-    }
-    throw "error";
-}
-
-Type *typeFromAst(SyntaxNode *ast) {
-    TypeDef def = findFromAst(ast->right);
-    //TODO: make more
-}
-
-
-
-void translateBranch(SyntaxNode *ast,Branch branch) {
-
-}
-void translateFunction(SyntaxNode *ast) {
-    auto *scope = new Scope;
-    scope->parent = nullptr;
-    scope->object.clear();
-    for (SyntaxNode *input: ast.input) {
-        auto *declaration = new VarDeclaration(typeFromAst(input));
-        declaration->isInput = true;
-        scope->object.push_back(declaration);
-
-    }
-    for (SyntaxNode *instruction: ast.instruction) {
-        if (instruction == Var_Declaration) {
-            auto *declaration = new VarDeclaration(typeFromAst(instruction));
-            decl.name = instruction->data;
-
-            scope->object.push_back(decl);
-        } else if (instruction == Statement) {
-            auto *statement = new Statement;
-            statement->ast = instruction->ast;
-            scope->object.push_back(statement);
-        } else if (instruction == Branch) {
-            auto *branch = new Branch;
-            branch->ast = instruction->ast;
-            branch->sub = new Scope;
-            branch->sub->parent = scope;
-            scope->object.push_back(branch);
-            translateBranch(instruction->ast , branch);
-        }
-    }
-}
-*/

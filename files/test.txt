@@ -13,15 +13,8 @@ struct linkBack {
 
 static Block {
     fn main() -> void {
-        int a = 0
-        if a {
-            int b = a
-        }
-        {
-        int c = a
-        }
-        int[] c = b
-        a()!
-        a = 0;
+        a()
+        b = 0
+        int a = 100
     }
 }

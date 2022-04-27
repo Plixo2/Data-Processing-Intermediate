@@ -44,8 +44,8 @@ idDef := "keyword"
 
 argList := 	expression "," argList | expression
 
-member := varTerminal | varTerminal "." member
-varTerminal := "keyword" | "keyword" "(" argList ")" | "keyword" "[" expression "]"
+member := varTerminal | varTerminal member
+varTerminal := "." "keyword" | "(" argList ")" | "[" expression "]"
 
 arrayInitializer := "[" argList "]"
 
