@@ -50,7 +50,7 @@ namespace Syntax {
     extern Token_Capture ASSIGN;
     extern Token_Capture ARROW;
     extern Token_Capture COMMENT;
-    extern Token_Capture LINE_COMMENT;
+//    extern Token_Capture LINE_COMMENT;
     extern Token_Capture EOL;
     extern Token_Capture END_OF_STATEMENT;
     // Token_Capture END_OF_STATEMENT = {35, R"(^;)", R"(^;$)", R"(^;)"};
@@ -89,19 +89,9 @@ namespace IRCode {
 }
 
 namespace LexNode {
-    extern const uint8_t ASSIGN_STATEMENT;
-    extern const uint8_t VAR_CREATION_STATEMENT;
     extern const uint8_t FUNCTION_DECLARATION;
-    extern const uint8_t VARIABLE_DECLARATION;
-    extern const uint8_t ARGUMENT;
-    extern const uint8_t FUNCTION_CALL;
     extern const uint8_t CALL_ARGUMENTS;
-    extern const uint8_t BRANCH_POSITIVE;
-    extern const uint8_t BRANCH_NEGATIVE;
-    extern const uint8_t EMPTY_EXPRESSION;
     extern const uint8_t EMPTY_INPUT;
-    extern const uint8_t FUNCTION_IO;
-    extern const uint8_t FUNCTION_OUTPUT;
     extern const uint8_t IDENTIFIER;
     extern const uint8_t TYPE_IDENTIFIER;
     extern const uint8_t EXPRESSION;
@@ -114,26 +104,10 @@ namespace LexNode {
     extern const uint8_t VAR_TERMINAL;
     extern const uint8_t ARRAY_INIT;
     extern const uint8_t EMPTY_STATEMENT;
-    extern const uint8_t ADDITION;
     extern const uint8_t UNARY;
     extern const uint8_t NUMBER;
-    extern const uint8_t B_AND;
-    extern const uint8_t B_OR;
     extern const uint8_t B_NOT;
-    extern const uint8_t A_PLUS;
-    extern const uint8_t A_MINUS;
     extern const uint8_t A_MULTIPLY;
-    extern const uint8_t A_DIVIDE;
-    extern const uint8_t A_MOD;
-    extern const uint8_t A_POW;
-    extern const uint8_t SMALLER;
-    extern const uint8_t SMALLER_EQUAL;
-    extern const uint8_t GREATER;
-    extern const uint8_t GREATER_EQUAL;
-    extern const uint8_t EQUALS;
-    extern const uint8_t NOT_EQUALS;
-    extern const uint8_t APPROX_EQUALS;
-    extern const uint8_t STATEMENT_BLOCK;
     extern const uint8_t TOP;
     extern const uint8_t STATIC_BLOCK;
     extern const uint8_t STRUCT_BLOCK;
@@ -141,7 +115,6 @@ namespace LexNode {
     extern const uint8_t DEFINITIONS_LIST;
     extern const uint8_t TYPE;
     extern const uint8_t TYPE_TYPE;
-    extern const uint8_t VAR_DEFINITION;
     extern const uint8_t VAR_DEFINITION_SHORT;
     extern const uint8_t TYPE_AND_ID;
     extern const uint8_t INPUT_DEFINITIONS;
@@ -155,12 +128,11 @@ namespace LexNode {
     extern const uint8_t STATEMENT_LIST;
     extern const uint8_t STATIC_FUNCTION;
     extern const uint8_t STATIC_LIST;
-    extern const uint8_t STATIC_FUNCTION_LIST;
     extern const uint8_t IF_STATEMENT;
     extern const uint8_t ELSE_BODY;
-    extern const uint8_t OLD1;
     extern const uint8_t IF_BODY_AND_CONDITION;
-    extern const uint8_t OLD0;
+    extern const uint8_t VAR_DEFINITION;
+    extern const uint8_t VAR_ACTION;
     extern const uint8_t VAR_ASSIGNMENT;
     extern const uint8_t VAR_CALL;
 

@@ -47,7 +47,7 @@ namespace Syntax {
     Token_Capture ASSIGN = {40, R"(^=)", R"(^=$)", R"(^=[^=]+)"};
     Token_Capture ARROW = {41, R"(^-)", R"(^(-|->)$)", R"(^->)"};
     Token_Capture COMMENT = {42, R"(^/)", R"(^//.*$)", R"(^//)"};
-    Token_Capture LINE_COMMENT = {43, R"(^;)", R"(^;$)", R"(^;)"};
+//    Token_Capture LINE_COMMENT = {43, R"(^;)", R"(^;$)", R"(^;)"};
     Token_Capture EOL = {44, "\\n", "\\n", ""};
     Token_Capture END_OF_STATEMENT = {45, R"(^;)", R"(^;$)", R"(^;)"};
 }
@@ -64,116 +64,80 @@ namespace IRCode {
     const uint8_t LOAD_MEMBER = 8;
     const uint8_t SET_MEMBER = 9;
     const uint8_t JUMP = 10;
-    const uint8_t JUMP_A = 66;
-    const uint8_t AND = 11;
-    const uint8_t OR = 12;
-    const uint8_t NOT = 13;
-    const uint8_t SMALLER = 14;
-    const uint8_t SMALLER_EQUAL = 15;
-    const uint8_t GREATER = 16;
-    const uint8_t GREATER_EQUAL = 17;
-    const uint8_t EQUALS = 18;
-    const uint8_t NOT_EQUALS = 19;
-    const uint8_t APPROX_EQUALS = 20;
-    const uint8_t PRINT = 21;
-    const uint8_t NEW = 27;
-    const uint8_t NOP = 22;
-    const uint8_t CALL = 23;
-    const uint8_t RETURN = 24;
-    const uint8_t END_OF_CODE = 62;
+    const uint8_t JUMP_A = 11;
+    const uint8_t AND = 12;
+    const uint8_t OR = 13;
+    const uint8_t NOT = 14;
+    const uint8_t SMALLER = 15;
+    const uint8_t SMALLER_EQUAL = 16;
+    const uint8_t GREATER = 17;
+    const uint8_t GREATER_EQUAL = 18;
+    const uint8_t EQUALS = 19;
+    const uint8_t NOT_EQUALS = 20;
+    const uint8_t APPROX_EQUALS = 21;
+    const uint8_t PRINT = 22;
+    const uint8_t NEW = 23;
+    const uint8_t NOP = 24;
+    const uint8_t CALL = 25;
+    const uint8_t RETURN = 26;
+    const uint8_t END_OF_CODE = 27;
 
 }
 
 
 namespace LexNode {
-    const uint8_t ASSIGN_STATEMENT = 0;
-    const uint8_t VAR_CREATION_STATEMENT = 1;
-    const uint8_t FUNCTION_DECLARATION = 2;
-    const uint8_t VARIABLE_DECLARATION = 3;
-    const uint8_t ARGUMENT = 4;
-    const uint8_t FUNCTION_CALL = 5;
-    const uint8_t CALL_ARGUMENTS = 6;
-    const uint8_t BRANCH_POSITIVE = 7;
-    const uint8_t BRANCH_NEGATIVE = 8;
-    const uint8_t EMPTY_EXPRESSION = 9;
-    const uint8_t EMPTY_INPUT = 10;
-    const uint8_t FUNCTION_IO = 11;
-    const uint8_t FUNCTION_OUTPUT = 12;
-    const uint8_t IDENTIFIER = 13;
-    const uint8_t TYPE_IDENTIFIER = 14;
-    const uint8_t EXPRESSION = 15;
-    const uint8_t BOOL_EXPRESSION = 16;
-    const uint8_t COMPARISON_EXPRESSION = 17;
-    const uint8_t ARITHMETIC = 18;
-    const uint8_t TERM = 19;
-    const uint8_t FACTOR = 20;
-    const uint8_t MEMBER = 21;
-    const uint8_t VAR_TERMINAL = 22;
-    const uint8_t ARRAY_INIT = 23;
-    const uint8_t EMPTY_STATEMENT = 24;
-    const uint8_t ADDITION = 25;
-    const uint8_t UNARY = 26;
-    const uint8_t NUMBER = 27;
-    const uint8_t B_AND = 28;
-    const uint8_t B_OR = 29;
-    const uint8_t B_NOT = 30;
-    const uint8_t A_PLUS = 31;
-    const uint8_t A_MINUS = 32;
-    const uint8_t A_MULTIPLY = 33;
-    const uint8_t A_DIVIDE = 34;
-    const uint8_t A_MOD = 35;
-    const uint8_t A_POW = 36;
-    const uint8_t SMALLER = 37;
-    const uint8_t SMALLER_EQUAL = 38;
-    const uint8_t GREATER = 39;
-    const uint8_t GREATER_EQUAL = 40;
-    const uint8_t EQUALS = 41;
-    const uint8_t NOT_EQUALS = 42;
-    const uint8_t APPROX_EQUALS = 43;
-    const uint8_t STATEMENT_BLOCK = 44;
-    const uint8_t TOP = 45;
-    const uint8_t STATIC_BLOCK = 46;
-    const uint8_t STRUCT_BLOCK = 47;
-    const uint8_t DEFINITION = 48;
-    const uint8_t DEFINITIONS_LIST = 49;
-    const uint8_t TYPE = 50;
-    const uint8_t TYPE_TYPE = 51;
-    const uint8_t VAR_DEFINITION = 52;
-    const uint8_t VAR_DEFINITION_SHORT = 53;
-    const uint8_t TYPE_AND_ID = 54;
-    const uint8_t INPUT_DEFINITIONS = 55;
-    const uint8_t INPUT_LIST = 56;
-    const uint8_t OUTPUT_DEFINITION = 57;
-    const uint8_t INPUT_AND_OUTPUT = 58;
-    const uint8_t STATEMENT = 59;
-    const uint8_t BLOCK_STATEMENT = 60;
-    const uint8_t FLOW_STATEMENT = 61;
-    const uint8_t SINGLE_STATEMENT = 62;
-    const uint8_t STATEMENT_LIST = 63;
-    const uint8_t STATIC_FUNCTION = 64;
-    const uint8_t STATIC_LIST = 65;
-    const uint8_t STATIC_FUNCTION_LIST = 66;
-    const uint8_t IF_STATEMENT = 67;
-    const uint8_t ELSE_BODY = 68;
-    const uint8_t IF_BODY_AND_CONDITION = 69;
-    const uint8_t VAR_ASSIGNMENT = 70;
-    const uint8_t VAR_CALL = 71;
+    const uint8_t FUNCTION_DECLARATION = 0;
+    const uint8_t CALL_ARGUMENTS = 1;
+    const uint8_t EMPTY_INPUT = 2;
+    const uint8_t IDENTIFIER = 3;
+    const uint8_t TYPE_IDENTIFIER = 4;
+    const uint8_t EXPRESSION = 5;
+    const uint8_t BOOL_EXPRESSION = 6;
+    const uint8_t COMPARISON_EXPRESSION = 7;
+    const uint8_t ARITHMETIC = 8;
+    const uint8_t TERM = 9;
+    const uint8_t FACTOR = 10;
+    const uint8_t MEMBER = 11;
+    const uint8_t VAR_TERMINAL = 12;
+    const uint8_t ARRAY_INIT = 13;
+    const uint8_t EMPTY_STATEMENT = 14;
+    const uint8_t UNARY = 15;
+    const uint8_t NUMBER = 16;
+    const uint8_t B_NOT = 17;
+    const uint8_t A_MULTIPLY = 18;
+    const uint8_t TOP = 19;
+    const uint8_t STATIC_BLOCK = 20;
+    const uint8_t STRUCT_BLOCK = 21;
+    const uint8_t DEFINITION = 22;
+    const uint8_t DEFINITIONS_LIST = 23;
+    const uint8_t TYPE = 24;
+    const uint8_t TYPE_TYPE = 25;
+    const uint8_t VAR_DEFINITION_SHORT = 26;
+    const uint8_t TYPE_AND_ID = 27;
+    const uint8_t INPUT_DEFINITIONS = 28;
+    const uint8_t INPUT_LIST = 29;
+    const uint8_t OUTPUT_DEFINITION = 30;
+    const uint8_t INPUT_AND_OUTPUT = 31;
+    const uint8_t STATEMENT = 32;
+    const uint8_t BLOCK_STATEMENT = 33;
+    const uint8_t FLOW_STATEMENT = 34;
+    const uint8_t SINGLE_STATEMENT = 35;
+    const uint8_t STATEMENT_LIST = 36;
+    const uint8_t STATIC_FUNCTION = 37;
+    const uint8_t STATIC_LIST = 38;
+    const uint8_t IF_STATEMENT = 39;
+    const uint8_t ELSE_BODY = 40;
+    const uint8_t IF_BODY_AND_CONDITION = 41;
+    const uint8_t VAR_DEFINITION = 42;
+    const uint8_t VAR_ACTION = 43;
+    const uint8_t VAR_ASSIGNMENT = 44;
+    const uint8_t VAR_CALL = 45;
 
 
     const std::vector<std::string> NAMES = {
-            "ASSIGN_STATEMENT",
-            "VAR_CREATION_STATEMENT",
             "FUNCTION_DECLARATION",
-            "VARIABLE_DECLARATION",
-            "ARGUMENT",
-            "FUNCTION_CALL",
             "CALL_ARGUMENTS",
-            "BRANCH_POSITIVE",
-            "BRANCH_NEGATIVE",
-            "EMPTY_EXPRESSION",
             "EMPTY_INPUT",
-            "FUNCTION_IO",
-            "FUNCTION_OUTPUT",
             "IDENTIFIER",
             "TYPE_IDENTIFIER",
             "EXPRESSION",
@@ -186,26 +150,10 @@ namespace LexNode {
             "VAR_TERMINAL",
             "ARRAY_INIT",
             "EMPTY_STATEMENT",
-            "ADDITION",
             "UNARY",
             "NUMBER",
-            "B_AND",
-            "B_OR",
             "B_NOT",
-            "A_PLUS",
-            "A_MINUS",
             "A_MULTIPLY",
-            "A_DIVIDE",
-            "A_MOD",
-            "A_POW",
-            "SMALLER",
-            "SMALLER_EQUAL",
-            "GREATER",
-            "GREATER_EQUAL",
-            "EQUALS",
-            "NOT_EQUALS",
-            "APPROX_EQUALS",
-            "STATEMENT_BLOCK",
             "TOP",
             "STATIC_BLOCK",
             "STRUCT_BLOCK",
@@ -213,7 +161,6 @@ namespace LexNode {
             "DEFINITIONS_LIST",
             "TYPE",
             "TYPE_TYPE",
-            "VAR_DEFINITION",
             "VAR_DEFINITION_SHORT",
             "TYPE_AND_ID",
             "INPUT_DEFINITIONS",
@@ -227,10 +174,11 @@ namespace LexNode {
             "STATEMENT_LIST",
             "STATIC_FUNCTION",
             "STATIC_LIST",
-            "STATIC_FUNCTION_LIST",
             "IF_STATEMENT",
             "ELSE_BODY",
             "IF_BODY_AND_CONDITION",
+            "VAR_DEFINITION",
+            "VAR_ACTION",
             "VAR_ASSIGNMENT",
             "VAR_CALL",
     };

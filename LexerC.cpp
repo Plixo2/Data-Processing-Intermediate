@@ -149,16 +149,22 @@ SyntaxNode *LexerC::statement() {
         FINISH(blockStatement);
     } else if (TYPEOF(Syntax::FOR) || TYPEOF(Syntax::IF)) {
         THEN(flowStatement);
+        MATCH(Syntax::END_OF_STATEMENT) {
+            NEXT;
+        }
         FINISH(flowStatement);
     } else MATCH(Syntax::KEYWORD) {
         THEN(normalStatement);
+        MATCH(Syntax::END_OF_STATEMENT) {
+            NEXT;
+        }
         FINISH(normalStatement);
     } else MATCH(Syntax::BRACES_CLOSED) {
         SyntaxNode *node = empty(LexNode::EMPTY_STATEMENT);
+        MATCH(Syntax::END_OF_STATEMENT) {
+            NEXT;
+        }
         FINISH(node);
-    }
-    MATCH(Syntax::END_OF_STATEMENT) {
-        NEXT;
     }
     END;
 }
@@ -207,20 +213,28 @@ SyntaxNode *LexerC::flowStatement() {
 SyntaxNode *LexerC::normalStatement() {
     BEGIN(SINGLE_STATEMENT);
 
-    THEN(member);
-    MATCH(Syntax::ASSIGN) {
+    THEN(idDef);
+   /* MATCH(Syntax::ASSIGN) {
+        NEXT;
         THEN(expression);
         SyntaxNode *node = createBiNode(LexNode::VAR_ASSIGNMENT, member, expression);
         FINISH(node);
-    } else MATCH(Syntax::KEYWORD) {
-        THEN(idDef);
-        SyntaxNode *typeAndID = createBiNode(LexNode::TYPE_AND_ID, member, idDef);
+    } */
+    MATCH(Syntax::KEYWORD) {
+        SyntaxNode *typeAndID = createBiNode(LexNode::TYPE_AND_ID, idDef, createNode(LexNode::MEMBER,this->idDef()));
         ASSERT(Syntax::ASSIGN);
         THEN(expression);
         SyntaxNode *create = createBiNode(LexNode::VAR_DEFINITION, typeAndID, expression);
         FINISH(create);
+    } else MATCH(Syntax::DOT) {
+        NEXT;
+
     }
-    FINISH(member);
+    /* else MATCH(Syntax::B_NOT)  {
+        NEXT;
+        SyntaxNode *action = createNode(LexNode::VAR_ACTION, member);
+        FINISH(action);
+    }*/
 
     END;
 }

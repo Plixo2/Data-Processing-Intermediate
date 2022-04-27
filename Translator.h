@@ -29,8 +29,22 @@ public:
 
     void buildStatic();
 
+    Block buildBlock(SyntaxNode *ast);
+
+    Branch buildBranch(SyntaxNode *ast);
+
+    Assignment buildAssignment(SyntaxNode *ast);
+
+    Action buildAction(SyntaxNode *ast);
+
+    Declaration buildDeclaration(SyntaxNode *ast);
+
+    std::vector<Statement> buildFromList(std::vector<SyntaxNode *> statements);
+
+
     StructFunction getFunctionDeclaration(SyntaxNode *node);
-    StaticFunction getFunctionDeclaration2(SyntaxNode *node);
+
+    StaticFunction getNamedFunctionDeclaration(SyntaxNode *node);
 
     std::pair<StructBlock *, bool> getStructVar(SyntaxNode *type);
 

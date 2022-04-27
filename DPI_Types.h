@@ -15,6 +15,7 @@ namespace types {
     struct _objTable;
     struct _funcProto;
     struct _prototype;
+    struct _statement;
 
     typedef union {
         double as_float;
@@ -112,7 +113,6 @@ namespace types {
         StructIOVar output;
     } StructFunction;
 
-
     typedef struct _structBlock {
         std::string name;
         std::vector<StructVar> variables;
@@ -123,12 +123,61 @@ namespace types {
         std::string name;
         std::vector<StructVar> input;
         StructIOVar output;
+        SyntaxNode *statements;
     } StaticFunction;
 
     typedef struct {
         std::string name;
         std::vector<StaticFunction> functions;
     } StaticBlock;
+
+/*    typedef struct {
+        StaticFunction *function;
+    } TopLevelScope;*/
+
+    typedef struct {
+        std::vector<StructVar> variables;
+        std::vector<_statement> statements;
+    } Scope;
+
+    typedef struct {
+        StructVar typeAndName;
+        SyntaxNode *expression;
+    } Declaration;
+
+    typedef struct {
+        SyntaxNode *condition;
+        std::vector<_statement> content;
+        std::vector<_statement> elseContent;
+    } Branch;
+
+    typedef struct {
+        std::vector<_statement> statements;
+    } Block;
+
+    typedef struct {
+        SyntaxNode *action;
+    } Action;
+
+    typedef struct {
+        SyntaxNode *member;
+        SyntaxNode *value;
+    } Assignment;
+
+    typedef struct _statement {
+        uint8_t type;
+        Block block;
+        Branch branch;
+        Action action;
+        Declaration declaration;
+        Assignment assignment;
+    } Statement;
+
+    #define DECLARATION_STATEMENT 1
+    #define ASSIGNMENT_STATEMENT 2
+    #define BRANCH_STATEMENT 3
+    #define ACTION_STATEMENT 4
+    #define BLOCK_STATEMENT_ 5
 
 }
 namespace std {

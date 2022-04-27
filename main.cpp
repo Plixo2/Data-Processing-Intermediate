@@ -86,7 +86,7 @@ int main() {
     caps.push_back(Syntax::KEYWORD);
     caps.push_back(Syntax::NUMBER);
     caps.push_back(Syntax::COMMENT);
-    caps.push_back(Syntax::LINE_COMMENT);
+//    caps.push_back(Syntax::LINE_COMMENT);
     caps.push_back(Syntax::WHITESPACE);
     caps.push_back(Syntax::END_OF_STATEMENT);
 

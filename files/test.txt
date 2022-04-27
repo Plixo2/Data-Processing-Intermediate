@@ -5,17 +5,23 @@ struct strc {
     linkForward[] l
     int i
     decimal d
-    fn a(decimal, int) -> void
+    fn functionName(decimal, int) -> void
 }
 struct linkBack {
     strc a
 }
 
 static Block {
-    fn a(int a, strc b) -> void {
-
-    }
-    fn abcdef(int a, decimal b) -> int {
-
+    fn main() -> void {
+        int a = 0
+        if a {
+            int b = a
+        }
+        {
+        int c = a
+        }
+        int[] c = b
+        a()!
+        a = 0;
     }
 }
