@@ -104,38 +104,50 @@ namespace LexNode {
     const uint8_t EMPTY_STATEMENT = 15;
     const uint8_t UNARY = 16;
     const uint8_t NUMBER = 17;
-    const uint8_t B_NOT = 18;
-    const uint8_t A_MULTIPLY = 19;
-    const uint8_t TOP = 20;
-    const uint8_t STATIC_BLOCK = 21;
-    const uint8_t STRUCT_BLOCK = 22;
-    const uint8_t DEFINITION = 23;
-    const uint8_t DEFINITIONS_LIST = 24;
-    const uint8_t TYPE = 25;
-    const uint8_t TYPE_TYPE = 26;
-    const uint8_t VAR_DEFINITION_SHORT = 27;
-    const uint8_t TYPE_AND_ID = 28;
-    const uint8_t INPUT_DEFINITIONS = 29;
-    const uint8_t INPUT_LIST = 30;
-    const uint8_t OUTPUT_DEFINITION = 31;
-    const uint8_t INPUT_AND_OUTPUT = 32;
-    const uint8_t STATEMENT = 33;
-    const uint8_t BLOCK_STATEMENT = 34;
-    const uint8_t FLOW_STATEMENT = 35;
-    const uint8_t SINGLE_STATEMENT = 36;
-    const uint8_t STATEMENT_LIST = 37;
-    const uint8_t STATIC_FUNCTION = 38;
-    const uint8_t STATIC_LIST = 39;
-    const uint8_t IF_STATEMENT = 40;
-    const uint8_t ELSE_BODY = 41;
-    const uint8_t IF_BODY_AND_CONDITION = 42;
-    const uint8_t VAR_DEFINITION = 43;
-    const uint8_t VAR_ACTION = 44;
-    const uint8_t VAR_ASSIGNMENT = 45;
-    const uint8_t VAR_CALL = 46;
-    const uint8_t ARRAY_ACCESS = 47;
-    const uint8_t MEMBER_ACCESS = 48;
-    const uint8_t FUNCTION_ACCESS = 49;
+    const uint8_t NOT = 18;
+    const uint8_t AND = 19;
+    const uint8_t OR = 20;
+    const uint8_t MUL = 21;
+    const uint8_t DIV = 22;
+    const uint8_t ADD = 23;
+    const uint8_t SUB = 24;
+    const uint8_t MOD = 25;
+    const uint8_t SMALLER = 26;
+    const uint8_t SMALLER_EQ = 27;
+    const uint8_t GREATER = 28;
+    const uint8_t GREATER_EQ = 29;
+    const uint8_t EQUALS = 30;
+    const uint8_t NOT_EQUALS = 31;
+    const uint8_t TOP = 32;
+    const uint8_t STATIC_BLOCK = 33;
+    const uint8_t STRUCT_BLOCK = 34;
+    const uint8_t DEFINITION = 35;
+    const uint8_t DEFINITIONS_LIST = 36;
+    const uint8_t TYPE = 37;
+    const uint8_t TYPE_TYPE = 38;
+    const uint8_t VAR_DEFINITION_SHORT = 39;
+    const uint8_t TYPE_AND_ID = 40;
+    const uint8_t INPUT_DEFINITIONS = 41;
+    const uint8_t INPUT_LIST = 42;
+    const uint8_t OUTPUT_DEFINITION = 43;
+    const uint8_t INPUT_AND_OUTPUT = 44;
+    const uint8_t STATEMENT = 45;
+    const uint8_t BLOCK_STATEMENT = 46;
+    const uint8_t FLOW_STATEMENT = 47;
+    const uint8_t SINGLE_STATEMENT = 48;
+    const uint8_t STATEMENT_LIST = 49;
+    const uint8_t STATIC_FUNCTION = 50;
+    const uint8_t STATIC_LIST = 51;
+    const uint8_t IF_STATEMENT = 52;
+    const uint8_t ELSE_BODY = 53;
+    const uint8_t IF_BODY_AND_CONDITION = 54;
+    const uint8_t VAR_DEFINITION = 55;
+    const uint8_t VAR_ACTION = 56;
+    const uint8_t VAR_ASSIGNMENT = 57;
+    const uint8_t VAR_CALL = 58;
+    const uint8_t ARRAY_ACCESS = 59;
+    const uint8_t MEMBER_ACCESS = 60;
+    const uint8_t FUNCTION_ACCESS = 61;
 
     const std::vector<std::string> NAMES = {
             "FUNCTION_DECLARATION",
@@ -156,8 +168,20 @@ namespace LexNode {
             "EMPTY_STATEMENT",
             "UNARY",
             "NUMBER",
-            "B_NOT",
-            "A_MULTIPLY",
+            "NOT",
+            "AND",
+            "OR",
+            "MUL",
+            "DIV",
+            "ADD",
+            "SUB",
+            "MOD",
+            "SMALLER",
+            "SMALLER_EQ",
+            "GREATER",
+            "GREATER_EQ",
+            "EQUALS",
+            "NOT_EQUALS",
             "TOP",
             "STATIC_BLOCK",
             "STRUCT_BLOCK",

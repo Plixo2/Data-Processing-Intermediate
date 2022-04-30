@@ -507,13 +507,14 @@ SyntaxNode *LexerC::expression() {
 SyntaxNode *LexerC::boolArithmetic() {
     BEGIN(BOOL_EXPRESSION);
 
-    THEN(comparisonArithmetic);
-    if (TYPEOF(Syntax::B_AND)) {
+    SyntaxNode *left = comparisonArithmetic();
+    while (TYPEOF(Syntax::B_OR) || TYPEOF(Syntax::B_AND)) {
+        uint8_t type = TYPEOF(Syntax::B_OR) ? LexNode::OR : LexNode::AND;
         NEXT;
-        THEN(boolArithmetic);
-        FINISH_BI(comparisonArithmetic, boolArithmetic);
+        SyntaxNode *right = comparisonArithmetic();
+        left = createBiNode(type, left, right);
     }
-    FINISH(comparisonArithmetic);
+    FINISH(left);
 
     END;
 }
@@ -521,13 +522,20 @@ SyntaxNode *LexerC::boolArithmetic() {
 SyntaxNode *LexerC::comparisonArithmetic() {
     BEGIN(COMPARISON_EXPRESSION);
 
-    THEN(arithmetic);
-    if (TYPEOF(Syntax::SMALLER_EQUAL)) {
+    SyntaxNode *left = arithmetic();
+    while (TYPEOF(Syntax::SMALLER) || TYPEOF(Syntax::SMALLER_EQUAL) || TYPEOF(Syntax::GREATER) ||
+           TYPEOF(Syntax::GREATER_EQUAL) || TYPEOF(Syntax::EQUALS) || TYPEOF(Syntax::NOT_EQUALS)) {
+        uint8_t type = TYPEOF(Syntax::SMALLER) ? LexNode::SMALLER
+                                              : TYPEOF(Syntax::SMALLER_EQUAL) ? LexNode::SMALLER_EQ
+                                              : TYPEOF(Syntax::GREATER) ? LexNode::GREATER
+                                              : TYPEOF(Syntax::GREATER_EQUAL) ? LexNode::GREATER_EQ
+                                              : TYPEOF(Syntax::EQUALS) ? LexNode::EQUALS
+                                              : LexNode::NOT_EQUALS;
         NEXT;
-        THEN(comparisonArithmetic);
-        FINISH_BI(arithmetic, comparisonArithmetic);
+        SyntaxNode *right = arithmetic();
+        left = createBiNode(type, left, right);
     }
-    FINISH(arithmetic);
+    FINISH(left);
 
     END;
 }
@@ -535,13 +543,14 @@ SyntaxNode *LexerC::comparisonArithmetic() {
 SyntaxNode *LexerC::arithmetic() {
     BEGIN(ARITHMETIC);
 
-    THEN(term);
-    if (TYPEOF(Syntax::A_PLUS)) {
+    SyntaxNode *left = term();
+    while (TYPEOF(Syntax::A_PLUS) || TYPEOF(Syntax::A_MINUS) || TYPEOF(Syntax::A_MOD)) {
+        uint8_t type = TYPEOF(Syntax::A_PLUS) ? LexNode::ADD : TYPEOF(Syntax::A_MINUS) ? LexNode::SUB : LexNode::MOD;
         NEXT;
-        THEN(arithmetic);
-        FINISH_BI(term, arithmetic);
+        SyntaxNode *right = term();
+        left = createBiNode(type, left, right);
     }
-    FINISH(term);
+    FINISH(left);
 
     END;
 }
@@ -550,10 +559,11 @@ SyntaxNode *LexerC::term() {
     BEGIN(TERM);
 
     SyntaxNode *left = factor();
-    while (TYPEOF(Syntax::A_MULTIPLY)) {
+    while (TYPEOF(Syntax::A_MULTIPLY) || TYPEOF(Syntax::A_DIVIDE)) {
+        uint8_t type = TYPEOF(Syntax::A_MULTIPLY) ? LexNode::MUL : LexNode::DIV;
         NEXT;
         SyntaxNode *right = factor();
-        left = createBiNode(LexNode::A_MULTIPLY, left, right);
+        left = createBiNode(type, left, right);
     }
     FINISH(left);
 
@@ -581,7 +591,7 @@ SyntaxNode *LexerC::factor() {
     } else MATCH(Syntax::B_NOT) {
         NEXT;
         THEN(factor);
-        SyntaxNode *node = createNode(LexNode::B_NOT, factor);
+        SyntaxNode *node = createNode(LexNode::NOT, factor);
         FINISH(node);
     } else MATCH(Syntax::NUMBER) {
         THEN(number);

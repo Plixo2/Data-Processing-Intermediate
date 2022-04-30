@@ -129,21 +129,21 @@ std::pair<StructBlock *, bool> Translator::getStructVar(SyntaxNode *type) {
         std::string exp = "cant find type " + type_id->data;
         throw TranslatorAssertionException(&exp);
     }
-    bool type_of_obj;
+    bool isArray;
     if (type_obj->data == "object") {
-        type_of_obj = false;
+        isArray = false;
     } else if (type_obj->data == "array") {
-        type_of_obj = true;
+        isArray = true;
     } else {
         std::string exp = "cant resolve its an array or not " + type_id->data;
         throw TranslatorAssertionException(&exp);
     }
-    return {typeObj, type_of_obj};
+    return {typeObj, isArray};
 }
 
 void Translator::buildPrototypes() {
     std::vector<std::pair<StructBlock *, SyntaxNode *>> structs;
-    for (SyntaxNode *item: ast) {
+    for (SyntaxNode *item: asts) {
         SyntaxNode *type = item->any();
         ASSERT_NODE(type);
         if (type->lex_type == LexNode::STRUCT_BLOCK) {
@@ -172,9 +172,7 @@ void Translator::buildPrototypes() {
             }
         }
     }
-    std::cout << structs.size() << std::endl;
     for (auto &item: structs) {
-        std::cout << "Struct: " << item.first->name << std::endl;
         buildStruct(item.first, item.second);
     }
 
@@ -190,11 +188,13 @@ void Translator::translate() {
     types["void"] = buildVoid;
     buildPrototypes();
     buildStatic();
+
+
 }
 
 
 Translator::Translator(std::vector<SyntaxNode *> ast) {
-    this->ast = std::move(ast);
+    this->asts = std::move(ast);
 }
 
 StructFunction Translator::getFunctionDeclaration(SyntaxNode *def) {
@@ -244,90 +244,121 @@ StaticFunction Translator::getNamedFunctionDeclaration(SyntaxNode *ast) {
 void Translator::buildStatic() {
     for (std::pair<std::string, StaticBlock *> block: namespaces) {
         for (const StaticFunction &function: block.second->functions) {
-            Statement statement = {};
             SyntaxNode *node = function.statements->assert();
-            if (node->lex_type == LexNode::BLOCK_STATEMENT) {
-                Block block = {};
-                std::vector<SyntaxNode *> flatStatements;
-                buildFlatVector(flatStatements, node, LexNode::STATEMENT_LIST, LexNode::STATEMENT);
-                for (const auto &statements: flatStatements) {
-
-                }
-            }
+            Statement *build = buildStatement(node);
+            block.second->statement = build;
         }
     }
 }
 
-
-std::vector<Statement> Translator::buildFromList(std::vector<SyntaxNode *> statements) {
-    std::vector<Statement> list;
-    for (const auto &node: statements) {
-        Statement statement;
-        if (node->lex_type == LexNode::BLOCK_STATEMENT) {
-            statement.type = BLOCK_STATEMENT_;
-            Block block = buildBlock(node->assert());
-            statement.block = block;
-        } else if (node->lex_type == LexNode::SINGLE_STATEMENT) {
-            auto type = node->assert();
-            if(type->lex_type == LexNode::VAR_ACTION) {
-                statement.type = ACTION_STATEMENT;
-                statement.action = buildAction(type);
-            } else if(type->lex_type == LexNode::VAR_DEFINITION) {
-                statement.type = DECLARATION_STATEMENT;
-                statement.declaration = buildDeclaration(type);
-            } else if(type->lex_type == LexNode::VAR_ASSIGNMENT) {
-                statement.type = ASSIGNMENT_STATEMENT;
-                statement.assignment = buildAssignment(type);
-            } else {
-                throw TranslatorAssertionException("error in single statement building");
-            }
-        } else if (node->lex_type == LexNode::FLOW_STATEMENT) {
-            statement.type = BRANCH_STATEMENT;
-            statement.branch = buildBranch(node);;
+Statement *Translator::buildStatement(SyntaxNode *ast) {
+    auto *node = ast;
+    if (node->lex_type == LexNode::STATEMENT) {
+        node = node->assert();
+    }
+    if (node->lex_type == LexNode::EMPTY_STATEMENT) {
+        return new Statement{EMPTY_STATEMENT_, {}};
+    } else if (node->lex_type == LexNode::BLOCK_STATEMENT) {
+        StatementObj obj;
+        obj.block = buildBlock(node->assert());
+        return new Statement{BLOCK_STATEMENT_, obj};
+    } else if (node->lex_type == LexNode::SINGLE_STATEMENT) {
+        auto type = node->assert();
+        if (type->lex_type == LexNode::VAR_ACTION) {
+            StatementObj obj;
+            obj.action = buildAction(type);
+            return new Statement{ACTION_STATEMENT, obj};
+        } else if (type->lex_type == LexNode::VAR_DEFINITION) {
+            StatementObj obj;
+            obj.declaration = buildDeclaration(type);
+            return new Statement{DECLARATION_STATEMENT, obj};
+        } else if (type->lex_type == LexNode::VAR_ASSIGNMENT) {
+            StatementObj obj;
+            obj.assignment = buildAssignment(type);
+            return new Statement{ASSIGNMENT_STATEMENT, obj};
         } else {
-            throw TranslatorAssertionException("error in statement building");
+            throw TranslatorAssertionException("error in single statement building");
         }
-        list.push_back(statement);
+    } else if (node->lex_type == LexNode::FLOW_STATEMENT) {
+        StatementObj obj;
+        obj.branch = buildBranch(node);
+        return new Statement{BRANCH_STATEMENT, obj};
+    } else {
+        std::string msg = "error in statement building: ";
+        msg += LexNode::NAMES[node->lex_type];
+        throw TranslatorAssertionException(&msg);
+    }
+}
+
+std::vector<Statement *> Translator::buildFromList(std::vector<SyntaxNode *> statements) {
+    std::vector<Statement *> list;
+    for (auto &node: statements) {
+        list.push_back(buildStatement(node));
     }
     return list;
 }
 
-Block Translator::buildBlock(SyntaxNode *ast) {
+Block *Translator::buildBlock(SyntaxNode *ast) {
     std::vector<SyntaxNode *> flatStatements;
     buildFlatVector(flatStatements, ast, LexNode::STATEMENT_LIST, LexNode::STATEMENT);
-    std::vector<Statement> statements = buildFromList(flatStatements);
-    Block block{statements};
-    return block;
+    std::vector<Statement *> statements = buildFromList(flatStatements);
+    return new Block{statements};
 }
 
-Action Translator::buildAction(SyntaxNode *ast) {
-    return {ast->assert(LexNode::MEMBER)};
+Action *Translator::buildAction(SyntaxNode *ast) {
+    return new Action{ast->assert(LexNode::MEMBER_START)};
 }
 
-Branch Translator::buildBranch(SyntaxNode *ast) {
-    return {};
+
+Branch *Translator::buildBranch(SyntaxNode *ast) {
+    if (ast->find(LexNode::IF_STATEMENT)) {
+        SyntaxNode *_if = ast->assert(LexNode::IF_STATEMENT);
+        SyntaxNode *body_and_expr = _if->assert(LexNode::IF_BODY_AND_CONDITION);
+        Statement *statement = buildStatement(body_and_expr->assert(LexNode::STATEMENT));
+        SyntaxNode *_else = _if->find(LexNode::ELSE_BODY);
+        Statement *elseContent = nullptr;
+        if (_else) {
+            elseContent = buildStatement(_else->assert(LexNode::STATEMENT));
+        }
+        return new Branch{
+                body_and_expr->assert(LexNode::EXPRESSION),
+                statement,
+                elseContent
+        };
+    }
+    throw TranslatorAssertionException("Unknown Branch statement");
 }
 
-Assignment Translator::buildAssignment(SyntaxNode *ast) {
-    return {ast->assert(LexNode::MEMBER),ast->assert(LexNode::EXPRESSION)};
+Assignment *Translator::buildAssignment(SyntaxNode *ast) {
+    return new Assignment{ast->assert(LexNode::MEMBER_START), ast->assert(LexNode::EXPRESSION)};
 }
 
-Declaration Translator::buildDeclaration(SyntaxNode *ast) {
-    std::cout << "decl" << std::endl;
+Declaration *Translator::buildDeclaration(SyntaxNode *ast) {
     SyntaxNode *typeAndID = ast->assert(LexNode::TYPE_AND_ID);
-    SyntaxNode *name = typeAndID->assert(LexNode::MEMBER_START)->assert(LexNode::IDENTIFIER);
+    SyntaxNode *_type = typeAndID->assert(LexNode::TYPE);
     SyntaxNode *type = typeAndID->assert(LexNode::IDENTIFIER);
+    SyntaxNode *name = _type->assert(LexNode::TYPE_IDENTIFIER);
+    SyntaxNode *type_obj = _type->assert(LexNode::TYPE_TYPE);
     SyntaxNode *expression = ast->assert(LexNode::EXPRESSION);
     StructVar typeAndName;
 
     StructBlock *typeOf = types[type->data];
-    if(typeOf == nullptr) {
+    if (typeOf == nullptr) {
         std::string msg = "" + type->data;
         throw TranslatorAssertionException(&msg);
     }
     typeAndName.type = typeOf;
     typeAndName.name = name->data;
-    typeAndName.isArray = false;
-//    typeAndName.
-    return {typeAndName,expression};
+    bool is_array;
+    if (type_obj->data == "object") {
+        is_array = false;
+    } else if (type_obj->data == "array") {
+        is_array = true;
+    } else {
+        std::string exp = "cant resolve its an array or not " + type_obj->data;
+        throw TranslatorAssertionException(&exp);
+    }
+    typeAndName.isArray = is_array;
+    return new Declaration{typeAndName, expression};
 }
+

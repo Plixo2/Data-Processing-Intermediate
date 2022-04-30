@@ -129,6 +129,7 @@ namespace types {
     typedef struct {
         std::string name;
         std::vector<StaticFunction> functions;
+        _statement *statement;
     } StaticBlock;
 
 /*    typedef struct {
@@ -145,14 +146,9 @@ namespace types {
         SyntaxNode *expression;
     } Declaration;
 
-    typedef struct {
-        SyntaxNode *condition;
-        std::vector<_statement> content;
-        std::vector<_statement> elseContent;
-    } Branch;
 
-    typedef struct {
-        std::vector<_statement> statements;
+    typedef struct _block {
+        std::vector<_statement*> statements;
     } Block;
 
     typedef struct {
@@ -164,21 +160,53 @@ namespace types {
         SyntaxNode *value;
     } Assignment;
 
+    typedef struct {
+        SyntaxNode *condition;
+        _statement *content;
+        _statement *elseContent = nullptr;
+    } Branch;
+
+
+#define DECLARATION_STATEMENT 1
+#define ASSIGNMENT_STATEMENT 2
+#define BRANCH_STATEMENT 3
+#define ACTION_STATEMENT 4
+#define BLOCK_STATEMENT_ 5
+#define EMPTY_STATEMENT_ 6
+
+    typedef union _statementObj {
+        Block *block;
+        Branch *branch;
+        Action *action;
+        Declaration *declaration;
+        Assignment *assignment;
+    } StatementObj;
+
+
     typedef struct _statement {
         uint8_t type;
-        Block block;
-        Branch branch;
-        Action action;
-        Declaration declaration;
-        Assignment assignment;
+        StatementObj object;
+
+        ~_statement() {
+            std::cout << "statement out of scope" << std::endl;
+            if (type == DECLARATION_STATEMENT) {
+                delete object.declaration;
+            } else if (type == ASSIGNMENT_STATEMENT) {
+                delete object.assignment;
+            } else if (type == BRANCH_STATEMENT) {
+                delete object.branch->elseContent;
+                delete object.branch->content;
+                delete object.branch;
+            } else if (type == ACTION_STATEMENT) {
+                delete object.action;
+            } else if (type == BLOCK_STATEMENT_) {
+                for (auto *statement : object.block->statements) {
+                    delete statement;
+                }
+                delete object.block;
+            }
+        }
     } Statement;
-
-    #define DECLARATION_STATEMENT 1
-    #define ASSIGNMENT_STATEMENT 2
-    #define BRANCH_STATEMENT 3
-    #define ACTION_STATEMENT 4
-    #define BLOCK_STATEMENT_ 5
-
 }
 namespace std {
     template<>

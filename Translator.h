@@ -16,9 +16,9 @@ private:
     std::vector<Instruction> instructions;
     std::vector<FunctionPrototype> functions;
     std::unordered_map<std::string, StructBlock *> types;
-    std::unordered_map<std::string, StaticBlock *> namespaces;
-    std::vector<SyntaxNode *> ast;
+    std::vector<SyntaxNode *> asts;
 public:
+    std::unordered_map<std::string, StaticBlock *> namespaces;
     explicit Translator(std::vector<SyntaxNode *> ast);
 
     void translate();
@@ -29,17 +29,19 @@ public:
 
     void buildStatic();
 
-    Block buildBlock(SyntaxNode *ast);
+    Block *buildBlock(SyntaxNode *ast);
 
-    Branch buildBranch(SyntaxNode *ast);
+    Branch *buildBranch(SyntaxNode *ast);
 
-    Assignment buildAssignment(SyntaxNode *ast);
+    Assignment *buildAssignment(SyntaxNode *ast);
 
-    Action buildAction(SyntaxNode *ast);
+    Action *buildAction(SyntaxNode *ast);
 
-    Declaration buildDeclaration(SyntaxNode *ast);
+    Declaration *buildDeclaration(SyntaxNode *ast);
 
-    std::vector<Statement> buildFromList(std::vector<SyntaxNode *> statements);
+    Statement *buildStatement(SyntaxNode *ast);
+
+    std::vector<Statement*> buildFromList(std::vector<SyntaxNode *> statements);
 
 
     StructFunction getFunctionDeclaration(SyntaxNode *node);

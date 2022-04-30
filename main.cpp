@@ -29,6 +29,8 @@ void printBT(const std::string &prefix, const Lexer::Node *node, bool isLeft) {
 }
 */
 
+
+
 void printBT2(const std::string &prefix, const SyntaxNode *node, bool isLeft) {
     if (node != nullptr) {
         std::cout << prefix;
@@ -38,10 +40,76 @@ void printBT2(const std::string &prefix, const SyntaxNode *node, bool isLeft) {
 
         std::cout << LexNode::NAMES[node->lex_type] << ": " << node->data << std::endl;
 
-        printBT2(prefix + (isLeft ? "|   " : "    "), node->left, true);
-        printBT2(prefix + (isLeft ? "|   " : "    "), node->right, false);
+        if(node->left && node->right) {
+            printBT2(prefix + (isLeft ? "|   " : "    "), node->left, true);
+            printBT2(prefix + (isLeft ? "|   " : "    "), node->right, false);
+        } else {
+            printBT2(prefix + (isLeft ? "|   " : "    "), node->left, false);
+            printBT2(prefix + (isLeft ? "|   " : "    "), node->right, true);
+        }
+
     }
 }
+
+void printBT2(const std::string &prefix, const Statement *node, bool isLeft) {
+    if (node != nullptr) {
+        std::cout << prefix;
+
+        std::cout << (isLeft ? "|--" : "L..");
+
+
+        std::string name = "";
+        switch (node->type) {
+            case DECLARATION_STATEMENT:
+                name = "DECLARATION_STATEMENT";
+                break;
+            case ASSIGNMENT_STATEMENT:
+                name = "ASSIGNMENT_STATEMENT";
+                break;
+            case ACTION_STATEMENT:
+                name = "ACTION_STATEMENT";
+                break;
+            case BRANCH_STATEMENT:
+                name = "BRANCH_STATEMENT";
+                break;
+            case BLOCK_STATEMENT_:
+                name = "BLOCK_STATEMENT";
+                break;
+            case EMPTY_STATEMENT_:
+                name = "EMPTY";
+                break;
+            default:
+                name = "Unknown";
+                break;
+        }
+        std::cout << name << "> " << std::endl;
+
+        switch (node->type) {
+            case DECLARATION_STATEMENT:
+                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.declaration->expression, true);
+                break;
+            case ASSIGNMENT_STATEMENT:
+                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.assignment->value, true);
+                break;
+            case ACTION_STATEMENT:
+                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.action->action, true);
+                break;
+            case BRANCH_STATEMENT:
+                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.branch->condition, true);
+                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.branch->content, true);
+                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.branch->elseContent, false);
+                break;
+            case BLOCK_STATEMENT_:
+                for(uint32_t i = 0; i < node->object.block->statements.size(); i++) {
+                    printBT2(prefix + (isLeft ? "|   " : "    "), node->object.block->statements[i], i != node->object.block->statements.size()-1);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+}
+
 
 
 int main() {
@@ -97,7 +165,7 @@ int main() {
     std::string content((std::istreambuf_iterator<char>(ifs)),
                         (std::istreambuf_iterator<char>()));
 
-    const std::string& str = content;
+    const std::string &str = content;
     const char *string = str.c_str();
     std::vector<Token> *stream = tokenizer.generate_stream(string, str.length());
 
@@ -128,6 +196,12 @@ int main() {
 
     Translator translator(vector);
     translator.translate();
+
+
+    for (const auto &item : translator.namespaces) {
+        printBT2("",item.second->statement ,false);
+    }
+
 
     for (SyntaxNode *item: vector) {
         delete item;
