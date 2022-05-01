@@ -9,7 +9,7 @@
 #include "DPI_Types.h"
 
 using namespace types;
-
+typedef std::unordered_map<std::string, FramedVariable>* VarMap;
 class Translator {
 private:
     std::vector<Constant> constants;
@@ -19,6 +19,7 @@ private:
     std::vector<SyntaxNode *> asts;
 public:
     std::unordered_map<std::string, StaticBlock *> namespaces;
+
     explicit Translator(std::vector<SyntaxNode *> ast);
 
     void translate();
@@ -28,6 +29,16 @@ public:
     void buildStruct(StructBlock *block, SyntaxNode *node);
 
     void buildStatic();
+
+    void
+    translateDeclaration(Declaration &statement, VarMap parentRegisters);
+
+    void
+    translateStatement(Statement &statement, VarMap parentRegisters);
+
+    void translateBlock(Block &block, VarMap parentRegisters);
+
+    void translateStaticBlocks(StaticBlock *block);
 
     Block *buildBlock(SyntaxNode *ast);
 
@@ -41,7 +52,7 @@ public:
 
     Statement *buildStatement(SyntaxNode *ast);
 
-    std::vector<Statement*> buildFromList(std::vector<SyntaxNode *> statements);
+    std::vector<Statement *> buildFromList(std::vector<SyntaxNode *> statements);
 
 
     StructFunction getFunctionDeclaration(SyntaxNode *node);

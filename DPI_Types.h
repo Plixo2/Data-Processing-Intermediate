@@ -124,12 +124,12 @@ namespace types {
         std::vector<StructVar> input;
         StructIOVar output;
         SyntaxNode *statements;
+        _statement *preProcessed;
     } StaticFunction;
 
     typedef struct {
         std::string name;
         std::vector<StaticFunction> functions;
-        _statement *statement;
     } StaticBlock;
 
 /*    typedef struct {
@@ -206,6 +206,13 @@ namespace types {
             }
         }
     } Statement;
+
+    typedef struct {
+        StructBlock *type;
+        bool isArray;
+        uint8_t _register;
+        std::string name;
+    } FramedVariable;
 }
 namespace std {
     template<>

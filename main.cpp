@@ -172,7 +172,9 @@ int main() {
 
 
     for (const auto &item : translator.namespaces) {
-        printBT2("",item.second->statement ,false);
+        for (const auto &func : item.second->functions)  {
+            printBT2("", func.preProcessed , false);
+        }
     }
 
 

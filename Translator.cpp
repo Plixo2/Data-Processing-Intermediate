@@ -187,6 +187,10 @@ void Translator::translate() {
     types["void"] = buildVoid;
     buildPrototypes();
     buildStatic();
+
+    for (const auto &item: namespaces) {
+        translateStaticBlocks(item.second);
+    }
 }
 
 
@@ -240,10 +244,10 @@ StaticFunction Translator::getNamedFunctionDeclaration(SyntaxNode *ast) {
 
 void Translator::buildStatic() {
     for (std::pair<std::string, StaticBlock *> block: namespaces) {
-        for (const StaticFunction &function: block.second->functions) {
+        for (StaticFunction function: block.second->functions) {
             SyntaxNode *node = function.statements->assert();
             Statement *build = buildStatement(node);
-            block.second->statement = build;
+            function.preProcessed = build;
         }
     }
 }
@@ -359,4 +363,94 @@ Declaration *Translator::buildDeclaration(SyntaxNode *ast) {
     typeAndName.isArray = is_array;
     return new Declaration{typeAndName, expression};
 }
+
+void Translator::translateDeclaration(Declaration &declaration,
+                                      VarMap varRegisters) {
+
+    if (varRegisters->contains(declaration.typeAndName.name)) {
+        std::string msg = "name collision for \"" + declaration.typeAndName.name + "\"";
+        throw TranslatorAssertionException(&msg);
+    } else {
+        std::cout << "input " << declaration.typeAndName.name << std::endl;
+        varRegisters->operator[](declaration.typeAndName.name) = {
+                declaration.typeAndName.type,
+                declaration.typeAndName.isArray,
+                (uint8_t) varRegisters->size(),
+                declaration.typeAndName.name
+        };
+    }
+}
+
+
+void translateExpressionIntoRegister(uint8_t _register, VarMap varRegisters , SyntaxNode *expression) {
+
+}
+
+
+void
+Translator::translateStatement(Statement &statement, VarMap parentRegisters) {
+    switch (statement.type) {
+        case DECLARATION_STATEMENT: {
+            translateDeclaration(*statement.object.declaration,parentRegisters);
+            break;
+        }
+        case ASSIGNMENT_STATEMENT: {
+
+            break;
+        }
+        case BRANCH_STATEMENT: {
+
+            break;
+        }
+        case ACTION_STATEMENT: {
+
+            break;
+        }
+        case BLOCK_STATEMENT_: {
+            translateBlock(*statement.object.block, parentRegisters);
+            break;
+        }
+        case EMPTY_STATEMENT_: {
+
+            break;
+        }
+    }
+}
+
+void Translator::translateBlock(Block &block, std::unordered_map<std::string, FramedVariable> *parentRegisters) {
+    std::unordered_map<std::string, FramedVariable> localRegisters;
+    for (const auto &item: *parentRegisters) {
+        localRegisters[item.first] = item.second;
+    }
+
+    for (Statement *item: block.statements) {
+        translateStatement(*item, &localRegisters);
+    }
+
+}
+
+void Translator::translateStaticBlocks(StaticBlock *block) {
+    std::cout << "-----" << std::endl;
+    for (const StaticFunction &func: block->functions) {
+        std::unordered_map<std::string, FramedVariable> varRegisters;
+
+        for (const StructVar &input: func.input) {
+            if (varRegisters.contains(input.name)) {
+                std::string msg = "name collision for \"" + input.name + "\"";
+                throw TranslatorAssertionException(&msg);
+            } else {
+                std::cout << "input " << input.name << std::endl;
+                varRegisters[input.name] = {
+                        input.type,
+                        input.isArray,
+                        (uint8_t) varRegisters.size(),
+                        input.name
+                };
+            }
+        }
+        translateStatement(*func.preProcessed, &varRegisters);
+    }
+}
+
+
 
