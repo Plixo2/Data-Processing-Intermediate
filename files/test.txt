@@ -13,11 +13,19 @@ struct linkBack {
 
 static Block {
     fn main() -> void {
-        int a = 20
-        a = 10
-        a()
-        if a {
+        a = fn (a, b) a += b
+        fn (int, int) -> int b = a
 
+        int a = 20
+        a.b.c[0] = 100
+            {
+            a()()
+            if a {
+
+            } else {
+
+            }
         }
     }
+    fn add(int a, int b) -> int return a + b
 }

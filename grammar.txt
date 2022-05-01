@@ -49,7 +49,7 @@ varTerminal := "." "keyword" | "(" argList ")" | "[" expression "]"
 
 arrayInitializer := "[" argList "]"
 
-expression := functionDef | boolArithmetic
+expression := staticFunction | boolArithmetic
 
 factor := "(" expression ")" |
 			"-" factor |

@@ -5,38 +5,12 @@
 #include "DPI_Syntax.h"
 #include "LexerC.h"
 #include "Translator.h"
-//#include "LexerC.h"
-
-/*
-void printBT(const std::string &prefix, const Lexer::Node *node, bool isLeft) {
-    if (node != nullptr) {
-        std::cout << prefix;
-
-        std::cout << (isLeft ? "|--" : "L--");
-
-        // print the value of the node
-        std::cout << LexNode::NAMES[node->lex_type] << ": " << node->data << std::endl;
-
-        // enter the next tree level - left and right branch
-        if (node->childs.size() >= 1) {
-            for (int i = 0; i < node->childs.size() - 1; i++) {
-                printBT(prefix + (isLeft ? "|   " : "    "), node->childs[i], true);
-            }
-            printBT(prefix + (isLeft ? "|   " : "    "), node->childs[node->childs.size() - 1], false);
-
-        }
-    }
-}
-*/
-
 
 
 void printBT2(const std::string &prefix, const SyntaxNode *node, bool isLeft) {
     if (node != nullptr) {
         std::cout << prefix;
-
-        std::cout << (isLeft ? "|--" : "L--");
-
+        std::cout << (isLeft ? "|--" : "L..");
 
         std::cout << LexNode::NAMES[node->lex_type] << ": " << node->data << std::endl;
 
@@ -54,9 +28,7 @@ void printBT2(const std::string &prefix, const SyntaxNode *node, bool isLeft) {
 void printBT2(const std::string &prefix, const Statement *node, bool isLeft) {
     if (node != nullptr) {
         std::cout << prefix;
-
         std::cout << (isLeft ? "|--" : "L..");
-
 
         std::string name = "";
         switch (node->type) {
@@ -86,17 +58,18 @@ void printBT2(const std::string &prefix, const Statement *node, bool isLeft) {
 
         switch (node->type) {
             case DECLARATION_STATEMENT:
-                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.declaration->expression, true);
+                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.declaration->expression, false);
                 break;
             case ASSIGNMENT_STATEMENT:
                 printBT2(prefix + (isLeft ? "|   " : "    "),node->object.assignment->value, true);
+                printBT2(prefix + (isLeft ? "|   " : "    "), node->object.assignment->member, false);
                 break;
             case ACTION_STATEMENT:
-                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.action->action, true);
+                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.action->action, false);
                 break;
             case BRANCH_STATEMENT:
                 printBT2(prefix + (isLeft ? "|   " : "    "),node->object.branch->condition, true);
-                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.branch->content, true);
+                printBT2(prefix + (isLeft ? "|   " : "    "),node->object.branch->content, node->object.branch->elseContent);
                 printBT2(prefix + (isLeft ? "|   " : "    "),node->object.branch->elseContent, false);
                 break;
             case BLOCK_STATEMENT_:

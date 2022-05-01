@@ -121,7 +121,6 @@ void Translator::buildStruct(StructBlock *block, SyntaxNode *node) {
 }
 
 std::pair<StructBlock *, bool> Translator::getStructVar(SyntaxNode *type) {
-
     auto *type_id = type->assert(LexNode::TYPE_IDENTIFIER);
     auto *type_obj = type->assert(LexNode::TYPE_TYPE);
     StructBlock *typeObj = types[type_id->data];
@@ -188,8 +187,6 @@ void Translator::translate() {
     types["void"] = buildVoid;
     buildPrototypes();
     buildStatic();
-
-
 }
 
 
@@ -330,7 +327,8 @@ Branch *Translator::buildBranch(SyntaxNode *ast) {
 }
 
 Assignment *Translator::buildAssignment(SyntaxNode *ast) {
-    return new Assignment{ast->assert(LexNode::MEMBER_START), ast->assert(LexNode::EXPRESSION)};
+    SyntaxNode *member = ast->assert(LexNode::MEMBER_START);
+    return new Assignment{member, ast->assert(LexNode::EXPRESSION)};
 }
 
 Declaration *Translator::buildDeclaration(SyntaxNode *ast) {
@@ -344,7 +342,7 @@ Declaration *Translator::buildDeclaration(SyntaxNode *ast) {
 
     StructBlock *typeOf = types[type->data];
     if (typeOf == nullptr) {
-        std::string msg = "" + type->data;
+        std::string msg = "type " + type->data + " not found";
         throw TranslatorAssertionException(&msg);
     }
     typeAndName.type = typeOf;

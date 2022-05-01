@@ -146,7 +146,6 @@ namespace types {
         SyntaxNode *expression;
     } Declaration;
 
-
     typedef struct _block {
         std::vector<_statement*> statements;
     } Block;
@@ -156,7 +155,7 @@ namespace types {
     } Action;
 
     typedef struct {
-        SyntaxNode *member;
+       SyntaxNode * member;
         SyntaxNode *value;
     } Assignment;
 

@@ -498,6 +498,11 @@ SyntaxNode *LexerC::arrayInitializer() {
 SyntaxNode *LexerC::expression() {
     BEGIN(EXPRESSION);
 
+    MATCH(Syntax::FN) {
+        THEN(staticFunction);
+        FINISH(staticFunction);
+    }
+
     THEN(boolArithmetic);
     FINISH(boolArithmetic);
 
