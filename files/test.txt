@@ -12,7 +12,9 @@ struct linkBack {
 }
 
 static Block {
-    fn main(int a, decimal a) -> void {
-
+    fn main(int a, decimal b) -> void {
+        int c = a[]()[]()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+        int d = b
+        yield
     }
 }

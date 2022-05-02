@@ -30,6 +30,13 @@ public:
 
     void buildStatic();
 
+    uint8_t expr(uint8_t _register, VarMap varRegisters , SyntaxNode *expression);
+    uint8_t bool_expr(uint8_t _register, VarMap varRegisters , SyntaxNode *expression);
+    uint8_t comp_expr(uint8_t _register, VarMap varRegisters , SyntaxNode *expression);
+    uint8_t arithmetic(uint8_t _register, VarMap varRegisters , SyntaxNode *expression);
+    uint8_t term(uint8_t _register, VarMap varRegisters , SyntaxNode *expression);
+    uint8_t factor(uint8_t _register, VarMap varRegisters , SyntaxNode *expression);
+
     void
     translateDeclaration(Declaration &statement, VarMap parentRegisters);
 

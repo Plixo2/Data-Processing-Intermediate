@@ -244,7 +244,7 @@ StaticFunction Translator::getNamedFunctionDeclaration(SyntaxNode *ast) {
 
 void Translator::buildStatic() {
     for (std::pair<std::string, StaticBlock *> block: namespaces) {
-        for (StaticFunction function: block.second->functions) {
+        for (StaticFunction &function: block.second->functions) {
             SyntaxNode *node = function.statements->assert();
             Statement *build = buildStatement(node);
             function.preProcessed = build;
@@ -367,23 +367,20 @@ Declaration *Translator::buildDeclaration(SyntaxNode *ast) {
 void Translator::translateDeclaration(Declaration &declaration,
                                       VarMap varRegisters) {
 
+    uint8_t size = varRegisters->size();
     if (varRegisters->contains(declaration.typeAndName.name)) {
         std::string msg = "name collision for \"" + declaration.typeAndName.name + "\"";
         throw TranslatorAssertionException(&msg);
     } else {
-        std::cout << "input " << declaration.typeAndName.name << std::endl;
+        std::cout << "variable " << declaration.typeAndName.name << " in register " << (int)size << std::endl;
         varRegisters->operator[](declaration.typeAndName.name) = {
                 declaration.typeAndName.type,
                 declaration.typeAndName.isArray,
-                (uint8_t) varRegisters->size(),
+                size,
                 declaration.typeAndName.name
         };
     }
-}
-
-
-void translateExpressionIntoRegister(uint8_t _register, VarMap varRegisters , SyntaxNode *expression) {
-
+    expr(size, varRegisters, declaration.expression);
 }
 
 
@@ -391,7 +388,7 @@ void
 Translator::translateStatement(Statement &statement, VarMap parentRegisters) {
     switch (statement.type) {
         case DECLARATION_STATEMENT: {
-            translateDeclaration(*statement.object.declaration,parentRegisters);
+            translateDeclaration(*statement.object.declaration, parentRegisters);
             break;
         }
         case ASSIGNMENT_STATEMENT: {
@@ -414,11 +411,15 @@ Translator::translateStatement(Statement &statement, VarMap parentRegisters) {
 
             break;
         }
+        default: {
+            std::cout << "unknown type" << std::endl;
+        }
     }
 }
 
 void Translator::translateBlock(Block &block, std::unordered_map<std::string, FramedVariable> *parentRegisters) {
     std::unordered_map<std::string, FramedVariable> localRegisters;
+    std::cout << "pushing variable stack" << std::endl;
     for (const auto &item: *parentRegisters) {
         localRegisters[item.first] = item.second;
     }
@@ -426,6 +427,7 @@ void Translator::translateBlock(Block &block, std::unordered_map<std::string, Fr
     for (Statement *item: block.statements) {
         translateStatement(*item, &localRegisters);
     }
+    std::cout << "popping variable stack" << std::endl;
 
 }
 
@@ -439,7 +441,7 @@ void Translator::translateStaticBlocks(StaticBlock *block) {
                 std::string msg = "name collision for \"" + input.name + "\"";
                 throw TranslatorAssertionException(&msg);
             } else {
-                std::cout << "input " << input.name << std::endl;
+                std::cout << "input " << input.name << " in register " <<  (int) varRegisters.size() << std::endl;
                 varRegisters[input.name] = {
                         input.type,
                         input.isArray,
@@ -451,6 +453,78 @@ void Translator::translateStaticBlocks(StaticBlock *block) {
         translateStatement(*func.preProcessed, &varRegisters);
     }
 }
+
+uint8_t Translator::expr(uint8_t _register, VarMap varRegisters, SyntaxNode *expression) {
+    if (expression->find(LexNode::BOOL_EXPRESSION)) {
+        bool_expr(_register, varRegisters, expression->find(LexNode::BOOL_EXPRESSION));
+    } else {
+        std::cout << "not yet implemented" << std::endl;
+    }
+    return _register;
+}
+
+uint8_t Translator::bool_expr(uint8_t _register, VarMap varRegisters, SyntaxNode *expression) {
+    if (expression->find(LexNode::COMPARISON_EXPRESSION)) {
+        comp_expr(_register, varRegisters, expression->find(LexNode::COMPARISON_EXPRESSION));
+    } else {
+        std::cout << "not yet implemented" << std::endl;
+    }
+    return _register;
+}
+
+uint8_t Translator::comp_expr(uint8_t _register, VarMap varRegisters, SyntaxNode *expression) {
+    if (expression->find(LexNode::ARITHMETIC)) {
+        arithmetic(_register, varRegisters, expression->find(LexNode::ARITHMETIC));
+    } else {
+        std::cout << "not yet implemented" << std::endl;
+    }
+    return _register;
+}
+
+uint8_t Translator::arithmetic(uint8_t _register, VarMap varRegisters, SyntaxNode *expression) {
+    if (expression->find(LexNode::TERM)) {
+        term(_register, varRegisters, expression->find(LexNode::TERM));
+    } else {
+        std::cout << "not yet implemented" << std::endl;
+    }
+    return _register;
+}
+
+uint8_t Translator::term(uint8_t _register, VarMap varRegisters, SyntaxNode *expression) {
+    if (expression->find(LexNode::FACTOR)) {
+        factor(_register, varRegisters, expression->find(LexNode::FACTOR));
+    } else {
+        std::cout << "not yet implemented" << std::endl;
+    }
+    return _register;
+}
+
+uint8_t Translator::factor(uint8_t _register, VarMap varRegisters, SyntaxNode *expression) {
+    SyntaxNode *num = expression->find(LexNode::NUMBER);
+    SyntaxNode *expr = expression->find(LexNode::EXPRESSION);
+    SyntaxNode *keywords = expression->find(LexNode::MEMBER_START);
+    if(num) {
+        std::cout << "move number " << num->data << " into register " << (int)_register << std::endl;
+    }
+    if(expr) {
+        return this->expr(_register,varRegisters,expr);
+    } 
+    if(keywords) {
+        std::string name = keywords->assert(LexNode::IDENTIFIER)->data;
+        if(varRegisters->contains(name)) {
+            FramedVariable var =  varRegisters->operator[](name);
+            std::cout << "move register " << (int)var._register << " into register " << (int)_register << std::endl;
+        } else {
+            std::cout << "not yet implemented" << std::endl;
+        }
+        return _register;
+    }
+    return _register;
+}
+
+
+
+
 
 
 
