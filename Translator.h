@@ -41,6 +41,9 @@ public:
     translateDeclaration(Declaration &statement, VarMap parentRegisters);
 
     void
+    translateAssignment(Assignment &statement, VarMap parentRegisters);
+
+    void
     translateStatement(Statement &statement, VarMap parentRegisters);
 
     void translateBlock(Block &block, VarMap parentRegisters);

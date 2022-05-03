@@ -372,7 +372,7 @@ void Translator::translateDeclaration(Declaration &declaration,
         std::string msg = "name collision for \"" + declaration.typeAndName.name + "\"";
         throw TranslatorAssertionException(&msg);
     } else {
-        std::cout << "variable " << declaration.typeAndName.name << " in register " << (int)size << std::endl;
+        std::cout << "variable " << declaration.typeAndName.name << " in register R-" << (int) size << std::endl;
         varRegisters->operator[](declaration.typeAndName.name) = {
                 declaration.typeAndName.type,
                 declaration.typeAndName.isArray,
@@ -392,7 +392,7 @@ Translator::translateStatement(Statement &statement, VarMap parentRegisters) {
             break;
         }
         case ASSIGNMENT_STATEMENT: {
-
+            translateAssignment(*statement.object.assignment, parentRegisters);
             break;
         }
         case BRANCH_STATEMENT: {
@@ -441,7 +441,7 @@ void Translator::translateStaticBlocks(StaticBlock *block) {
                 std::string msg = "name collision for \"" + input.name + "\"";
                 throw TranslatorAssertionException(&msg);
             } else {
-                std::cout << "input " << input.name << " in register " <<  (int) varRegisters.size() << std::endl;
+                std::cout << "input " << input.name << " in register R-" << (int) varRegisters.size() << std::endl;
                 varRegisters[input.name] = {
                         input.type,
                         input.isArray,
@@ -503,23 +503,63 @@ uint8_t Translator::factor(uint8_t _register, VarMap varRegisters, SyntaxNode *e
     SyntaxNode *num = expression->find(LexNode::NUMBER);
     SyntaxNode *expr = expression->find(LexNode::EXPRESSION);
     SyntaxNode *keywords = expression->find(LexNode::MEMBER_START);
-    if(num) {
-        std::cout << "move number " << num->data << " into register " << (int)_register << std::endl;
-    }
-    if(expr) {
-        return this->expr(_register,varRegisters,expr);
-    } 
-    if(keywords) {
+    SyntaxNode *unary = expression->find(LexNode::UNARY);
+    SyntaxNode *_not = expression->find(LexNode::NOT);
+    if (num) {
+        std::cout << "move number " << num->data << " into R-" << (int) _register << std::endl;
+    } else if (expr) {
+        return this->expr(_register, varRegisters, expr);
+    } else if (keywords) {
         std::string name = keywords->assert(LexNode::IDENTIFIER)->data;
-        if(varRegisters->contains(name)) {
-            FramedVariable var =  varRegisters->operator[](name);
-            std::cout << "move register " << (int)var._register << " into register " << (int)_register << std::endl;
+        if (varRegisters->contains(name)) {
+            FramedVariable var = varRegisters->operator[](name);
+            std::cout << "move R-" << (int) var._register << " into R-" << (int) _register
+                      << std::endl;
         } else {
             std::cout << "not yet implemented" << std::endl;
         }
+
+        std::vector<SyntaxNode *> members;
+        buildFlatVector(members, keywords, LexNode::MEMBER, LexNode::VAR_TERMINAL);
+        for (SyntaxNode *member: members) {
+            SyntaxNode *arrayAccess = member->find(LexNode::ARRAY_ACCESS);
+            SyntaxNode *funcAccess = member->find(LexNode::FUNCTION_ACCESS);
+            if (arrayAccess) {
+                SyntaxNode *arrayExpr = arrayAccess->assert(LexNode::EXPRESSION);
+                const uint8_t exprRegister = this->expr(_register + 1, varRegisters, arrayExpr);
+                std::cout << "array access from R-" << (int) _register << " at position R-" << (int) exprRegister
+                          << " into R-" << (int) _register << std::endl;
+            } else if (funcAccess) {
+                std::vector<SyntaxNode *> arguments;
+                buildFlatVector(arguments, funcAccess, LexNode::CALL_ARGUMENTS,
+                                LexNode::EXPRESSION);
+                uint8_t registers = 0;
+                for (SyntaxNode *arg: arguments) {
+                    registers += 1;
+                    const uint8_t exprRegister = this->expr(_register + registers, varRegisters, arg);
+                    std::cout << "Arg moved R-" << (int) exprRegister << " into R-[Max-"
+                              << (int) (arguments.size() - registers) << "]" << std::endl;
+                }
+                std::cout << "calling R-" << (int) _register << std::endl;
+            }
+        }
         return _register;
+    } else if (unary) {
+        const uint8_t exprRegister = this->factor(_register, varRegisters, unary->assert(LexNode::FACTOR));
+        std::cout << "move minus of R-" << (int) exprRegister << " into R-" << (int)_register << std::endl;
+        return exprRegister;
+    } else if (_not) {
+        const uint8_t exprRegister = this->factor(_register, varRegisters, _not->assert(LexNode::FACTOR));
+        std::cout << "move logic negation of R-" << (int) exprRegister << " into R-" << (int)_register << std::endl;
+        return exprRegister;
     }
     return _register;
+}
+
+void Translator::translateAssignment(Assignment &statement, VarMap varRegisters) {
+    uint8_t size = varRegisters->size();
+    expr(size, varRegisters, statement.value);
+
 }
 
 

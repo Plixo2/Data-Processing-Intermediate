@@ -91,6 +91,7 @@ namespace IRCode {
 namespace LexNode {
     extern const uint8_t FUNCTION_DECLARATION;
     extern const uint8_t CALL_ARGUMENTS;
+    extern const uint8_t CALL_ARGUMENT;
     extern const uint8_t EMPTY_INPUT;
     extern const uint8_t IDENTIFIER;
     extern const uint8_t TYPE_IDENTIFIER;

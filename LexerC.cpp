@@ -419,10 +419,12 @@ SyntaxNode *LexerC::argList() {
     BEGIN(CALL_ARGUMENTS);
 
     MATCH(Syntax::PARENTHESES_CLOSED) {
+        std::cout << "empty argList" << std::endl;
         FINISH(empty(LexNode::CALL_ARGUMENTS));
     }
     THEN(expression);
-    MATCH(Syntax::SEPARATOR) {
+    if (TYPEOF(Syntax::SEPARATOR)) {
+        NEXT;
         THEN(argList);
         FINISH_BI(expression, argList);
     }

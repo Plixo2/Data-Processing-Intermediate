@@ -13,7 +13,7 @@ class DuplicateToken: public std::exception
     {
         return "A Token Type is found twice";
     }
-} excp;
+} ;
 
 Tokenizer::~Tokenizer() {
 
@@ -23,7 +23,7 @@ Tokenizer::Tokenizer(std::vector<Token_Capture> captures) : captures(captures) {
     std::set<uint64_t> set;
     for (const auto &item : captures) {
         if(set.contains(item.type)) {
-            throw excp;
+            throw DuplicateToken();
         }
         set.insert(item.type);
     }
@@ -32,18 +32,16 @@ Tokenizer::Tokenizer(std::vector<Token_Capture> captures) : captures(captures) {
 
 std::vector<Token> *Tokenizer::generate_stream(const char *char_stream, uint64_t length) {
     auto *list = new std::vector<Token>();
-    length += 1;
     uint64_t char_index = 0;
     std::string as_string;
     std::string full_string;
     char *data = const_cast<char *>(char_stream);
-    int size = length;
-    full_string.assign(data, size);
+    full_string.assign(data, length);
     as_string += char_stream[char_index];
 
-    while (char_index < length) {
+    while (char_index <= length) {
         bool matched = false;
-        for (Token_Capture capture: captures) {
+        for (Token_Capture &capture: captures) {
             std::regex regex(capture.start_match);
             std::regex peek(capture.peek_match,  std::regex_constants::ECMAScript |  std::regex_constants::extended );
             if (std::regex_match(as_string, regex) &&
@@ -51,7 +49,7 @@ std::vector<Token> *Tokenizer::generate_stream(const char *char_stream, uint64_t
                 matched = true;
                 std::regex capture_regex(capture.capture_match);
                 char_index++;
-                while (char_index < length) {
+                while (char_index <= length) {
                     as_string += char_stream[char_index];
                     char_index++;
                     if (!std::regex_match(as_string, capture_regex)) {
@@ -59,7 +57,7 @@ std::vector<Token> *Tokenizer::generate_stream(const char *char_stream, uint64_t
                         break;
                     }
                 }
-                if (char_index < length) {
+                if (char_index <= length) {
                     char_index--;
                 }
                 list->push_back({capture.type, as_string, 0, 0});
