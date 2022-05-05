@@ -423,7 +423,7 @@ SyntaxNode *LexerC::argList() {
         FINISH(empty(LexNode::CALL_ARGUMENTS));
     }
     THEN(expression);
-    if (TYPEOF(Syntax::SEPARATOR)) {
+    MATCH(Syntax::SEPARATOR) {
         NEXT;
         THEN(argList);
         FINISH_BI(expression, argList);

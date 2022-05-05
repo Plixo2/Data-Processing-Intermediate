@@ -16,3 +16,8 @@ static Block {
         int c = a[2][0]()
     }
 }
+
+namespace Block {
+    var int i = 1000;
+    fn main(String[] )
+}

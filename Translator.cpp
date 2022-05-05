@@ -545,7 +545,7 @@ uint8_t Translator::factor(uint8_t _register, VarMap varRegisters, SyntaxNode *e
         }
         return _register;
     } else if (unary) {
-        const uint8_t exprRegister = this->factor(_register, varRegisters, unary->assert(LexNode::FACTOR));
+        const uint8_t exprRegister = this->factor(_register, varRegisters, unary->assert(LexNode::kFACTOR));
         std::cout << "move minus of R-" << (int) exprRegister << " into R-" << (int)_register << std::endl;
         return exprRegister;
     } else if (_not) {
