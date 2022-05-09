@@ -28,6 +28,20 @@ void run(Interpreter::ObjectTable *entry, std::vector<Interpreter::ObjectTable *
     found_objects.clear();
     found_objects.insert(entry);
     markObjects(entry);
+
+    std::set<uint64_t> pointers;
+    uint64_t size = objs->size();
+    for (int i = 0; i < size; i++) {
+        Interpreter::ObjectTable *&item = objs->at(i);
+        pointers.push_back(item);
+    }
+    for(int i = 0; i < stack.size(); i++) {
+        Value *val = stack->get(i);
+        if(pointers.contains(val->as_int)) {
+            markObjects(val->as_object);
+        }
+    }
+
     uint64_t size = objs->size();
     for (int i = 0; i < size; i++) {
         Interpreter::ObjectTable *&item = objs->at(i);
